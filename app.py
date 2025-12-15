@@ -3,6 +3,10 @@ import tkinter as tk
 from ui.login_view import build_login_view
 from ui.main_menu_view import build_main_menu_view
 from db.connection import get_connection
+from ui.product_view import build_products_view
+from ui.repayment_view import build_repayments_view
+from ui.application_view import build_applications_view
+from ui.report_view import build_reports_view
 
 def main():
     root = tk.Tk()
@@ -33,6 +37,10 @@ def main():
     # Build screens
     build_login_view(container, app_context )
     build_main_menu_view(container, app_context)
+    build_products_view(container, app_context)
+    build_repayments_view(container, app_context)
+    build_applications_view(container, app_context)
+    build_reports_view(container, app_context)
 
     # Show login first
     frames["login"].tkraise()
