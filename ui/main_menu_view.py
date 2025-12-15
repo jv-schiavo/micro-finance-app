@@ -1,0 +1,19 @@
+import tkinter as tk
+
+def build_main_menu_view(parent, app_context):
+    frame = tk.Frame(parent)
+    app_context["frames"]["main"] = frame
+
+    frame.grid(row=0, column=0, sticky="nsew")
+
+    tk.Label(frame, text="Main Menu", font=("Arial", 18, "bold")).pack()
+
+    spacer = tk.Frame(frame)
+    spacer.pack(fill="both", expand=True)
+
+    def on_logout_click():
+        app_context["frames"]["login"].tkraise()
+    
+    tk.Button(frame, text="Logout", width=15, command=on_logout_click).pack(anchor="se", padx=15, pady=15)
+   
+
