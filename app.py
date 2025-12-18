@@ -10,7 +10,7 @@ from ui.report_view import build_reports_view
 
 def main():
     root = tk.Tk()
-    root.title = "Micro Finance Management System"
+    root.title("Micro Finance Management System")
     root.geometry("1000x600")
 
     
