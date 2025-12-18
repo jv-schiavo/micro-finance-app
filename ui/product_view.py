@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
+
 
 def build_products_view(parent, app_context):
     frame = tk.Frame(parent)
@@ -11,10 +13,7 @@ def build_products_view(parent, app_context):
 
     toolbar = tk.Frame(frame)
     toolbar.pack(anchor="w", padx=15, pady=5)
-    tk.Button(toolbar, text="Add", width=10, command=on_add_product).pack(side="left", padx=5)
-    tk.Button(toolbar, text="Delete", width=10).pack(side="left", padx=5)
-    tk.Button(toolbar, text="Edit", width=10).pack(side="left", padx=5)
-    
+
     search_frame = tk.Frame(frame)
     search_frame.pack(anchor="w", padx=15, pady=5)
 
@@ -102,6 +101,25 @@ def build_products_view(parent, app_context):
             popup.destroy()
 
         tk.Button(popup, text="Save", width=10, command=save_product).pack(pady=15)
+
+    def on_delet_product():
+        selected = tree.selection()
+
+        if not selected:
+            messagebox.showwarning(
+                title="No selection",
+                message="Please select a product to delete"
+            )
+            return
+        
+        for item in selected:
+            tree.delete(item)
+        
+    
+    tk.Button(toolbar, text="Add", width=10, command=on_add_product).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Delete", width=10, command=on_delet_product).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Edit", width=10).pack(side="left", padx=5)
+    
                 
     
 
