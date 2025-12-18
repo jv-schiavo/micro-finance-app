@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 def build_products_view(parent, app_context):
     frame = tk.Frame(parent)
@@ -6,40 +7,103 @@ def build_products_view(parent, app_context):
     frame.grid(row=0, column=0, sticky="nsew")
 
     # Title
-    tk.Label(frame, text="Products", font=("Arial", 18, "bold")).pack()
+    tk.Label(frame, text="Product Management", font=("Arial", 18, "bold")).pack(anchor="w", padx=15, pady=(10,5))
 
-    # Form
-    form = tk.Frame(frame)
-    form.pack(pady=10)
+    toolbar = tk.Frame(frame)
+    toolbar.pack(anchor="w", padx=15, pady=5)
+    tk.Button(toolbar, text="Add", width=10, command=on_add_product).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Delete", width=10).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Edit", width=10).pack(side="left", padx=5)
+    
+    search_frame = tk.Frame(frame)
+    search_frame.pack(anchor="w", padx=15, pady=5)
 
-    tk.Label(form, text="Product Name").grid(row=0, column=0, sticky="e", padx=5, pady=5)
-    name_entry = tk.Entry(form, width=25)
-    name_entry.grid(row=0, column=1, padx=5, pady=5)
+    tk.Label(search_frame, text="Search:").pack(side="left")
+    search_entry = tk.Entry(search_frame, width=30)
+    search_entry.pack(side="left", padx=5)
 
-    tk.Label(form, text="Interest Rate %").grid(row=1, column=0, sticky="e", padx=5, pady=5)
-    rate_entry = tk.Entry(form, width=25)
-    rate_entry.grid(row=1, column=1, padx=5, pady=5)
+    # Creating Table
+    columns = ("id", "name", "rate", "minAmount", "maxAmount", "fees", "minTerm", "maxTerm")
 
-    tk.Label(form, text="Minimum Amount £").grid(row=2, column=0, sticky="e", padx=5, pady=5)
-    min_entry = tk.Entry(form, width=25)
-    min_entry.grid(row=2, column=1, padx=5, pady=5)
+    tree = ttk.Treeview(frame, columns=columns, show="headings", height=10)
 
-    tk.Label(form, text="Maximum Amount £").grid(row=3, column=0, sticky="e", padx=5, pady=5)
-    max_entry = tk.Entry(form, width=25)
-    max_entry.grid(row=3, column=1, padx=5, pady=5)
+    tree.heading("id", text="ID")
+    tree.heading("name", text="Product Name")
+    tree.heading("rate", text="Interest Rate %")
+    tree.heading("minAmount", text="Minimum Amount")
+    tree.heading("maxAmount", text="Maximum Amount")
+    tree.heading("fees", text="Fees £")
+    tree.heading("minTerm", text="Minimum Term")
+    tree.heading("maxTerm", text="Maximum Term")
 
-    tk.Label(form, text="Fees £").grid(row=4, column=0, sticky="e", padx=5, pady=5)
-    fees_entry = tk.Entry(form, width=25)
-    fees_entry.grid(row=2, column=4, padx=5, pady=5)
+    tree.column("id", width=50, anchor="center")
+    tree.column("name", width=180)
+    tree.column("rate", width=100, anchor="center")
+    tree.column("minAmount", width=100, anchor="center")
+    tree.column("maxAmount", width=100, anchor="center")
+    tree.column("fees", width=100, anchor="center")
+    tree.column("minTerm", width=100, anchor="center")
+    tree.column("maxTerm", width=100, anchor="center")
 
-    tk.Label(form, text="Minimum Term (months)").grid(row=5, column=0, sticky="e", padx=5, pady=5)
-    minTerm_entry = tk.Entry(form, width=25)
-    minTerm_entry.grid(row=5, column=1, padx=5, pady=5)
+    tree.pack(fill="both", expand=True, padx=15, pady=10)
 
-    tk.Label(form, text="Maximum Term (months)").grid(row=6, column=0, sticky="e", padx=5, pady=5)
-    maxTerm_entry = tk.Entry(form, width=25)
-    maxTerm_entry.grid(row=6, column=1, padx=5, pady=5)
+    # Add and Save product to list
+    def on_add_product():
+        popup = tk.Toplevel(frame)
+        popup.title("Add Product")
+        popup.geometry("350x450")
+        popup.transient(frame)
+        popup.grab_set()
 
+        tk.Label(popup, text="Product Name").pack(pady=5)
+        name_entry = tk.Entry(popup)
+        name_entry.pack()
+
+        tk.Label(popup, text="Interest Rate %").pack(pady=5)
+        rate_entry = tk.Entry(popup)
+        rate_entry.pack()
+
+        tk.Label(popup, text="Minimum Amount").pack(pady=5)
+        minAmount_entry = tk.Entry(popup)
+        minAmount_entry.pack()
+
+        tk.Label(popup, text="Maximum Amount").pack(pady=5)
+        maxAmount_entry = tk.Entry(popup)
+        maxAmount_entry.pack()
+
+        tk.Label(popup, text="Fees").pack(pady=5)
+        fees_entry = tk.Entry(popup)
+        fees_entry.pack()
+
+        tk.Label(popup, text="Minimum Term").pack(pady=5)
+        minTerm_entry = tk.Entry(popup)
+        minTerm_entry.pack()
+
+        tk.Label(popup, text="Maximum Term").pack(pady=5)
+        maxTerm_entry = tk.Entry(popup)
+        maxTerm_entry.pack()
+
+        def save_product():
+            name = name_entry.get()
+            rate = rate_entry.get()
+            minAmout = minAmount_entry.get()
+            maxAmount = maxAmount_entry.get()
+            fees = fees_entry.get()
+            minTerm = minTerm_entry.get()
+            maxTerm = maxTerm_entry.get()
+
+            
+
+            if not (name and rate and minAmout and maxAmount and fees and minTerm and maxTerm):
+                return
+            
+            tree.insert("","end",values=("", name, rate, minAmout, maxAmount, fees, minTerm, maxTerm))
+            print("SAVED")
+            popup.destroy()
+
+        tk.Button(popup, text="Save", width=10, command=save_product).pack(pady=15)
+                
+    
 
     spacer = tk.Frame(frame)
     spacer.pack(fill="both", expand=True)
