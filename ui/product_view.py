@@ -102,7 +102,8 @@ def build_products_view(parent, app_context):
 
         tk.Button(popup, text="Save", width=10, command=save_product).pack(pady=15)
 
-    def on_delet_product():
+    def on_delete_product():
+
         selected = tree.selection()
 
         if not selected:
@@ -112,13 +113,74 @@ def build_products_view(parent, app_context):
             )
             return
         
+        confirm = messagebox.askyesno(
+        title="Confirm deletion",
+        message="Are you sure you want to delete the selected product?"
+    )
+
+        if not confirm:
+            return
+        
         for item in selected:
             tree.delete(item)
+
+    def on_edit_product():
+
+        selected = tree.selection()
+
+        if not selected:
+            messagebox.showwarning(
+                title="No selection",
+                message="Please select a product to delete"
+            )
+            return
         
+        item_id = selected[0]
+        values = tree.item(item_id, "values")
+
+        popup = tk.Toplevel(frame)
+        popup.title("Edit Product")
+        popup.geometry("350x450")
+        popup.transient(frame)
+        popup.grab_set()
+
+        def labeled_entry(label, value):
+            tk.Label(popup, text=label).pack(pady=3)
+            e = tk.Entry(popup)
+            e.insert(0, value)
+            e.pack()
+            return e
+
+        name_entry = labeled_entry("Product Name", values[1])
+        rate_entry = labeled_entry("Interest Rate %", values[2])
+        minAmount_entry = labeled_entry("Minimum Amount", values[3])
+        maxAmount_entry = labeled_entry("Maximum Amount", values[4])
+        fees_entry = labeled_entry("Fees", values[5])
+        minTerm_entry = labeled_entry("Minimum Term", values[6])
+        maxTerm_entry = labeled_entry("Maximum Term", values[7])
+
+        def save_changes():
+            tree.item(
+                item_id,
+                values=(
+                    values[0],
+                    name_entry.get(),
+                    rate_entry.get(),
+                    minAmount_entry.get(),
+                    maxAmount_entry.get(),
+                    fees_entry.get(),
+                    minTerm_entry.get(),
+                    maxTerm_entry.get()
+                )
+            )
+            popup.destroy()
+
+        tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack(pady=15)
+
     
     tk.Button(toolbar, text="Add", width=10, command=on_add_product).pack(side="left", padx=5)
-    tk.Button(toolbar, text="Delete", width=10, command=on_delet_product).pack(side="left", padx=5)
-    tk.Button(toolbar, text="Edit", width=10).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Delete", width=10, command=on_delete_product).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Edit", width=10, command=on_edit_product).pack(side="left", padx=5)
     
                 
     
