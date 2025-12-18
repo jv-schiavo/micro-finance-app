@@ -3,44 +3,31 @@ import tkinter as tk
 def build_main_menu_view(parent, app_context):
     frame = tk.Frame(parent)
     app_context["frames"]["main"] = frame
-
     frame.grid(row=0, column=0, sticky="nsew")
 
-    tk.Label(frame, text="Main Menu", font=("Arial", 18, "bold")).pack()
+    # Center container
+    content = tk.Frame(frame)
+    content.place(relx=0.5, rely=0.5, anchor="center")
 
-    spacer = tk.Frame(frame)
-    spacer.pack(fill="both", expand=True)
+    # Title
+    tk.Label(content, text="Main Menu", font=("Arial", 22, "bold")).pack(pady=(0, 25))
 
-    # Logout flow
-    def on_logout_click():
-        app_context["frames"]["login"].tkraise()
+    # Button style
+    def menu_button(text, command):
+        return tk.Button(content, text=text, width=25, height=2, command=command)
     
-    tk.Button(frame, text="Logout", width=15, command=on_logout_click).pack(anchor="se", padx=15, pady=15)
+    # Menu buttons
+    menu_button("Products",
+        lambda: app_context["frames"]["products"].tkraise()).pack(pady=6)
 
-    # Products flow
-    def on_products_click():
-        app_context["frames"]["products"].tkraise()
+    menu_button("Repayments",
+        lambda: app_context["frames"]["repayments"].tkraise()).pack(pady=6)
 
-    tk.Button(frame, text="Products", width=15, command=on_products_click).pack(pady=10)
+    menu_button("Applications",
+        lambda: app_context["frames"]["applications"].tkraise()).pack(pady=6)
 
-    # Repayment flow
-    def on_repayments_click():
-        app_context["frames"]["repayments"].tkraise()
+    menu_button("Reports",
+        lambda: app_context["frames"]["reports"].tkraise()).pack(pady=6)
 
-    tk.Button(frame, text="Repayments", width=15, command=on_repayments_click).pack(pady=15)    
-
-    # Application flow
-    def on_application_click():
-        app_context["frames"]["applications"].tkraise()
-
-    tk.Button(frame, text="Applications", width=15, command=on_application_click).pack(pady=5)
-
-    # Reports flow
-    def on_repots_click():
-        app_context["frames"]["reports"].tkraise()
-
-    tk.Button(frame, text="Reports", width=15, command=on_repots_click).pack(pady=5)
-
-
-   
-
+    # Logout
+    tk.Button(frame, text="Logout", width=12, command=lambda: app_context["frames"]["login"].tkraise()).place(relx=0.97, rely=0.05, anchor="ne")
