@@ -112,7 +112,88 @@ def build_applications_view(parent, app_context):
 
         tk.Button(popup, text="Save", width=10, command=save_application).pack(pady=15)   
 
+    def on_edit_application():
+
+        selected = tree.selection()
+
+        if not selected:
+            messagebox.showwarning(
+                title="No selection",
+                message="Please select a product to delete"
+            )
+            return
+        
+        item_id = selected[0]
+        values = tree.item(item_id, "values")
+
+        popup = tk.Toplevel(frame)
+        popup.title("Edit Product")
+        popup.geometry("350x550")
+        popup.transient(frame)
+        popup.grab_set()
+
+        def labeled_entry(label, value):
+            tk.Label(popup, text=label).pack(pady=3)
+            e = tk.Entry(popup)
+            e.insert(0, value)
+            e.pack()
+            return e
+
+        name_entry = labeled_entry("Customer Name", values[1])
+        product_entry = labeled_entry("Product Name", values[2])
+        income_entry = labeled_entry("Income", values[3])
+        job_entry = labeled_entry("Job Position", values[4])
+        credit_entry = labeled_entry("Credit Score", values[5])
+        amount_entry = labeled_entry("Amount Requested", values[6])
+        purpose_entry = labeled_entry("Loan Purpose", values[7])
+        notes_entry = labeled_entry("Office Notes", values[8])
+        term_entry = labeled_entry("Term Requested", values[9])
+
+        def save_changes():
+            tree.item(
+                item_id,
+                values=(
+                    values[0],
+                    name_entry.get(),
+                    product_entry.get(),
+                    income_entry.get(),
+                    job_entry.get(),
+                    credit_entry.get(),
+                    amount_entry.get(),
+                    purpose_entry.get(),
+                    notes_entry.get(),
+                    term_entry.get()
+                )
+            )
+            popup.destroy()
+
+        tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack(pady=15)
+
+    def on_delete_application():
+
+        selected = tree.selection()
+
+        if not selected:
+            messagebox.showwarning(
+                title="No selection",
+                message="Please select an application to delete"
+            )
+            return
+        
+        confirm = messagebox.askyesno(
+        title="Confirm deletion",
+        message="Are you sure you want to delete the selected application?"
+    )
+        if not confirm:
+            return
+        
+        for item in selected:
+            tree.delete(item)        
+
     tk.Button(toolbar, text="Add", width=10, command=on_add_application).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Edit", width=10, command=on_edit_application).pack(side="left", padx=5)
+    tk.Button(toolbar, text="Delete", width=10, command=on_delete_application).pack(side="left", padx=5)
+
 
     spacer = tk.Frame(frame)
     spacer.pack(fill="both", expand=True)
