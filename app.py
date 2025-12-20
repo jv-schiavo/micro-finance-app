@@ -7,6 +7,7 @@ from ui.product_view import build_products_view
 from ui.repayment_view import build_repayments_view
 from ui.application_view import build_applications_view
 from ui.report_view import build_reports_view
+from ui.customer_view import build_customers_view
 
 def main():
     root = tk.Tk()
@@ -41,6 +42,7 @@ def main():
     build_repayments_view(container, app_context)
     build_applications_view(container, app_context)
     build_reports_view(container, app_context)
+    build_customers_view(container, app_context)
 
     # Show login first
     frames["login"].tkraise()

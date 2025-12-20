@@ -17,14 +17,17 @@ def build_main_menu_view(parent, app_context):
         return tk.Button(content, text=text, width=25, height=2, command=command)
     
     # Menu buttons
+    menu_button("Applications",
+        lambda: app_context["frames"]["applications"].tkraise()).pack(pady=6)
+    
+    menu_button("Customers",
+                lambda: app_context["frames"]["customers"].tkraise()).pack(pady=6)
+    
     menu_button("Products",
         lambda: app_context["frames"]["products"].tkraise()).pack(pady=6)
 
     menu_button("Repayments",
         lambda: app_context["frames"]["repayments"].tkraise()).pack(pady=6)
-
-    menu_button("Applications",
-        lambda: app_context["frames"]["applications"].tkraise()).pack(pady=6)
 
     menu_button("Reports",
         lambda: app_context["frames"]["reports"].tkraise()).pack(pady=6)
