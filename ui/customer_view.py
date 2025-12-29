@@ -8,49 +8,101 @@ import io
 
 def build_customers_view(parent, app_context):
     customer_images = {}
+
     frame = tk.Frame(parent)
     app_context["frames"]["customers"] = frame
-
     frame.grid(row=0, column=0, sticky="nsew")
 
     # Title
     tk.Label(frame, text="Customers", font=("Arial", 18, "bold")).pack(anchor="w", padx=15, pady=(10,5))
 
+    # Toolbar
     toolbar = tk.Frame(frame)
     toolbar.pack(anchor="w", padx=15, pady=5)
 
     search_frame = tk.Frame(frame)
     search_frame.pack(anchor="w", padx=15, pady=5)
     tk.Label(search_frame, text="Search:").pack(side="left")
-    search_entry = tk.Entry(search_frame, width=30)
-    search_entry.pack(side="left", padx=5)
+    tk.Entry(search_frame, width=30).pack(side="left", padx=5)
+
+    # Content
+    content = tk.Frame(frame)
+    content.pack(fill="both", expand=True, padx=15, pady=10)
+
+    content.grid_columnconfigure(0, weight=4) # Table
+    content.grid_columnconfigure(1, weight=1) # preview
+    content.grid_rowconfigure(0, weight=1)
 
     # Creating Table
-    columns = ("id", "name", "DOB", "address", "phone", "nationalID")
+    table_container = tk.Frame(content)
+    table_container.pack(side="left", fill="both", expand=True)
 
-    tree = ttk.Treeview(frame, columns=columns, show="headings", height=10)
+    columns = ("id", "name", "dob", "address", "phone", "nationalID")
+    tree = ttk.Treeview(table_container, columns=columns, show="headings")
 
     tree.heading("id", text="ID")
     tree.heading("name", text="Customer Name")
-    tree.heading("DOB", text="Date of Birth")
+    tree.heading("dob", text="Date of Birth")
     tree.heading("address", text="Address")
     tree.heading("phone", text="Phone Number")
     tree.heading("nationalID", text="National ID")
 
     tree.column("id", width=50, anchor="center")
     tree.column("name", width=220)
-    tree.column("DOB", width=100, anchor="center")
+    tree.column("dob", width=110, anchor="center")
     tree.column("address", width=200)
-    tree.column("phone", width=100)
-    tree.column("nationalID", width=100, anchor="center")
+    tree.column("phone", width=120)
+    tree.column("nationalID", width=120)
 
-    tree.pack(fill="both", expand=True, padx=15, pady=10)
+    tree.pack(fill="both", expand=True)
 
+    # Photo Preview
+    preview_panel = tk.Frame(content, width=300, height=220, relief="groove", bd=2)
+    preview_panel.pack(side="right", fill="y", padx=(15, 0))
+    preview_panel.grid_propagate(False)
+
+    tk.Label(preview_panel,
+              text="ID Photo", 
+              font=("Arial", 11, "bold")
+    ).pack(pady=8)          
+
+    id_preview = tk.Label(
+        preview_panel,
+        width=260,
+        height=140,
+        relief="solid",
+        text="Select a customer",
+        justify="center"
+    )
+    id_preview.pack(pady=10)
+
+    def on_customer_select(event):
+        selected = tree.selection()
+        if not selected:
+            id_preview.config(image="", text="Select a customer")
+            id_preview.image = None
+            return
+        
+        image_bytes = customer_images.get(selected[0])
+        if not image_bytes:
+            id_preview.config(text="No image")
+            return
+        
+        img = Image.open(io.BytesIO(image_bytes))
+        img.thumbnail((260, 140))
+        photo = ImageTk.PhotoImage(img)
+
+        id_preview.config(image=photo, text="")
+        id_preview.image = photo
+
+    tree.bind("<<TreeviewSelect>>", on_customer_select)
+
+    
     # Add and Save application to list
     def on_add_customer():
         popup = tk.Toplevel(frame)
         popup.title("Add Customer")
-        popup.geometry("350x450")
+        popup.geometry("350x600")
         popup.transient(frame)
         popup.grab_set()
 
@@ -70,11 +122,26 @@ def build_customers_view(parent, app_context):
         phone_entry = tk.Entry(popup)
         phone_entry.pack()
 
-        tk.Label(popup, text="National ID").pack(pady=5)
+        tk.Label(popup,text="National ID").pack(pady=5)
         national_entry = tk.Entry(popup)
         national_entry.pack()
 
         image_bytes = None
+
+        photo_frame = tk.Frame(popup, width=240, height=140)
+        photo_frame.pack(pady=10)
+        photo_frame.pack_propagate(False)
+
+        tk.Label(photo_frame, text="National ID Photo").pack(anchor="w")
+
+        photo_preview = tk.Label(
+            photo_frame,
+            relief="solid",
+            text="No image selected",
+            justify="center"
+        )
+        photo_preview.pack(fill="both", expand=True)
+
         def upload_image():
             nonlocal image_bytes
 
@@ -85,19 +152,14 @@ def build_customers_view(parent, app_context):
                 return
 
             img = Image.open(file_path)
-            img.thumbnail((200, 200))
+            img.thumbnail((220, 120))
 
             photo = ImageTk.PhotoImage(img)
-            image_label.config(image=photo)
-            image_label.image = photo
-
+            photo_preview.config(image=photo, text="")
+            photo_preview.image = photo
+            
             with open(file_path, "rb") as f:
                 image_bytes = f.read()
-
-        tk.Label(popup, text="National ID Photo").pack(pady=5)
-
-        image_label = tk.Label(popup, width=200, height=200, relief="solid")
-        image_label.pack(pady=5)
 
         tk.Button(popup, text="Upload Image", command=upload_image).pack(pady=5)
 
@@ -124,7 +186,7 @@ def build_customers_view(parent, app_context):
                 "end",
                 values=("", name, dob, address, phone, national)
             )
-
+            print("Saved")
             customer_images[item_id] = image_bytes
             popup.destroy()
 
@@ -207,49 +269,10 @@ def build_customers_view(parent, app_context):
     tk.Button(toolbar, text="Edit", width=10, command=on_edit_customer).pack(side="left", padx=5)
     tk.Button(toolbar, text="Delete", width=10, command=on_delete_customer).pack(side="left", padx=5)
 
-
-    spacer = tk.Frame(frame)
-    spacer.pack(fill="both", expand=True)
-
-    preview_panel = tk.Frame(frame)
-    preview_panel.pack(side="right", padx=15, pady=15)
-
-    tk.Label(preview_panel, text="National ID Preview").pack()
-
-    id_preview = tk.Label(
-        preview_panel,
-        width=300,
-        height=300,
-        relief="solid"
-    )
-    id_preview.pack()
-
-    def on_customer_select(event):
-        selected = tree.selection()
-        if not selected:
-            id_preview.config(image="")
-            id_preview.image = None
-            return
-
-        item_id = selected[0]
-
-        image_bytes = customer_images.get(item_id)
-        if not image_bytes:
-            id_preview.config(image="")
-            return
-
-        img = Image.open(io.BytesIO(image_bytes))
-        img.thumbnail((300, 300))
-
-        photo = ImageTk.PhotoImage(img)
-        id_preview.config(image=photo)
-        id_preview.image = photo
-
-    tree.bind("<<TreeviewSelect>>", on_customer_select)
-
-
      # Return flow
     def on_return_click():
         app_context["frames"]["main"].tkraise()
     
-    tk.Button(frame, text="Return", width=15, command=on_return_click).pack(anchor="se", padx=15, pady=15)
+    footer = tk.Frame(frame)
+    footer.pack(fill="x", padx=15, pady=10)
+    tk.Button(footer, text="Return", width=15, command=on_return_click).pack(anchor="e")
