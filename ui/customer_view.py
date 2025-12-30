@@ -273,6 +273,4 @@ def build_customers_view(parent, app_context):
     def on_return_click():
         app_context["frames"]["main"].tkraise()
     
-    footer = tk.Frame(frame)
-    footer.pack(fill="x", padx=15, pady=10)
-    tk.Button(footer, text="Return", width=15, command=on_return_click).pack(anchor="e")
+    tk.Button(toolbar, text="Return", width=10, command=on_return_click).pack(side="right")
