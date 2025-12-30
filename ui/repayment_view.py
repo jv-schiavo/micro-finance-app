@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from datetime import date, timedelta
+from datetime import *
 
 def build_repayments_view(parent, app_context):
     frame = tk.Frame(parent)
@@ -84,6 +84,32 @@ def build_repayments_view(parent, app_context):
 
     def get_selected_period():
         selected = period_var.get()
+
+        today = date.today()
+
+        if selected == "This month":
+            start = today.replace(day=1)
+            end = today
+            print(start, end)
+
+        elif selected == "Last month":
+            first_day_this_month = today.replace(day=1)
+            end = first_day_this_month - timedelta(days=1)
+            start = end.replace(day=1)
+            print(start, end)
+
+        elif selected == "Last 3 months":
+            start = today - timedelta(days=90)
+            end = today
+            print(start, end)
+
+        elif selected == "All":
+            start = today - timedelta(days=1825)
+            end = today
+            print(start, end)
+            
+
+
         return periods.index(selected)
     
     # Debugger
