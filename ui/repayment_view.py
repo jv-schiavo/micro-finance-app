@@ -107,10 +107,8 @@ def build_repayments_view(parent, app_context):
             start = today - timedelta(days=1825)
             end = today
             print(start, end)
-            
 
-
-        return periods.index(selected)
+        return start, end
     
     # Debugger
     def on_period_selected(event):
@@ -118,6 +116,8 @@ def build_repayments_view(parent, app_context):
         print("Selected period:", period)
 
     period_combo.bind("<<ComboboxSelected>>", on_period_selected)
+
+
 
 
      # Return flow
