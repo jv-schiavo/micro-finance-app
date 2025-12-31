@@ -45,14 +45,20 @@ def build_repayments_view(parent, app_context):
 
     loan_combo["values"] = display_values
 
-    def get_selected_loan_id():
+    def get_selected_loan():
         selected = loan_var.get()
         return loan_map.get(selected)
     
+    info_label = tk.Label(
+    loan_bar,
+    textvariable=loan_var,
+    font=("Arial", 10,"bold"))
+    info_label.pack(anchor="w", padx=15, pady=10)
+
     # Debugger
     def on_loan_selected(event):
-        loan_id = get_selected_loan_id()
-        print("Selected loan_id:", loan_id)
+        loan = get_selected_loan()
+        return loan
 
     loan_combo.bind("<<ComboboxSelected>>", on_loan_selected)
 
@@ -74,10 +80,12 @@ def build_repayments_view(parent, app_context):
     period_combo.pack(side="left")
 
     periods = [
+        (""),
         ("This month"),
         ("Last month"),
         ("Last 3 months"),
         ("All")
+        
     ]
     
     period_combo["values"] = periods
@@ -108,14 +116,99 @@ def build_repayments_view(parent, app_context):
             end = today
             print(start, end)
 
-        return start, end
-    
-    # Debugger
-    def on_period_selected(event):
-        period = get_selected_period()
-        print("Selected period:", period)
+        elif selected == "":
+            start = None
+            end = None
+            print()
 
+        return start, end  
+
+
+    def on_period_selected(event):
+        start, end = get_selected_period()
+        if start and end:
+            period_var.set(f"From {start} To {end}")
+
+    period_label = tk.Label(
+    period_bar,
+    textvariable=period_var,
+    font=("Arial", 10, "bold"))
+    period_label.pack(padx=25)
+
+        
     period_combo.bind("<<ComboboxSelected>>", on_period_selected)
+
+    # Button to add repayments manually
+    add_repayment_holder = tk.Frame(frame)
+    add_repayment_holder.pack(anchor="w",padx=8, pady=2)
+
+    # Creating Table
+    table_frame = tk.Frame(frame)
+    table_frame.pack(fill="both", expand=True, padx=15, pady=10)
+
+    columns = ("repayment id", "date", "amount", "method", "reference")
+
+    tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
+
+    tree.heading("repayment id", text="ID")
+    tree.heading("date", text="Date")
+    tree.heading("amount", text="Amount")
+    tree.heading("method", text="Method")
+    tree.heading("reference", text="Reference")
+
+    tree.column("repayment id", width=50, anchor="center")
+    tree.column("date", width=180, anchor="center")
+    tree.column("amount", width=100, anchor="center")
+    tree.column("method", width=100)
+    tree.column("reference", width=100)
+
+    tree.pack(fill="both", expand=True, padx=15, pady=10)
+    
+
+    def on_add_application():
+        popup = tk.Toplevel(frame)
+        popup.title("Add Repayment")
+        popup.geometry("350x550")
+        popup.transient(frame)
+        popup.grab_set()
+
+        tk.Label(popup, text="Amount").pack(pady=5)
+        amount_entry = tk.Entry(popup)
+        amount_entry.pack()
+
+        tk.Label(popup, text="Method").pack(pady=5)
+        method_entry = tk.Entry(popup)
+        method_entry.pack()
+
+        tk.Label(popup, text="Reference").pack(pady=5)
+        reference_entry = tk.Entry(popup)
+        reference_entry.pack()
+
+        def save_application():
+            amount = amount_entry.get()
+            method = method_entry.get()
+            reference = reference_entry.get()
+            today = date.today()
+
+            if not (amount and method and reference):
+                return
+            
+            tree.insert("", "end", values=("", today, amount, method, reference))
+            popup.destroy()
+
+        tk.Button(popup, text="Save", width=10, command=save_application).pack(pady=15) 
+    
+    tk.Button(add_repayment_holder, text="Add Repayment", width=15, command=on_add_application).pack(anchor="w",padx=8, pady=20)
+
+    receipt_frame = tk.LabelFrame(frame, text="Receipt / Details", padx=10, pady=10)
+    receipt_frame.pack(fill="x", padx=15, pady=10)
+
+    tk.Label(receipt_frame, text="Select a repayment to view details").pack()
+
+
+
+
+    
 
 
 
