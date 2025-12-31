@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from datetime import *
+from tkinter import filedialog, messagebox
 
 def build_repayments_view(parent, app_context):
     frame = tk.Frame(parent)
@@ -9,6 +10,13 @@ def build_repayments_view(parent, app_context):
     frame.grid(row=0, column=0, sticky="nsew")
 
     tk.Label(frame, text="Repayments", font=("Arial", 18, "bold")).pack()
+
+    # Return flow
+    def on_return_click():
+        app_context["frames"]["main"].tkraise()
+    
+
+    tk.Button(frame, text="Return", width=15, command=on_return_click).place(relx=0.97, rely=0.05, anchor="ne")
 
    
     # Loan Selection
@@ -29,17 +37,17 @@ def build_repayments_view(parent, app_context):
 
      # Temp Loan opt
     loans = [
-        (1, "LN-000234", "John Smith", 5000, "ACTIVE"),
-        (2, "LN-000235", "John Smith", 2000, "CLOSED"),
-        (3, "LN-000236", "Mary Jones", 3500, "ACTIVE"),
+        (1, "John Smith", 5000, "ACTIVE"),
+        (2, "John Smith", 2000, "CLOSED"),
+        (3, "Mary Jones", 3500, "ACTIVE"),
     ] 
     
     loan_map = {}
 
     display_values = []
 
-    for loan_id, loan_code, name, amount, status in loans:
-        display = f"{loan_code} | {name} | £{amount} | {status}"
+    for loan_id, name, amount, status in loans:
+        display = f"{loan_id} | {name} | £{amount} | {status}"
         display_values.append(display)
         loan_map[display] = loan_id
 
@@ -49,10 +57,7 @@ def build_repayments_view(parent, app_context):
         selected = loan_var.get()
         return loan_map.get(selected)
     
-    info_label = tk.Label(
-    loan_bar,
-    textvariable=loan_var,
-    font=("Arial", 10,"bold"))
+    info_label = tk.Label(loan_bar, textvariable=loan_var, font=("Arial", 13,"bold"))
     info_label.pack(anchor="w", padx=15, pady=10)
 
     # Debugger
@@ -132,7 +137,7 @@ def build_repayments_view(parent, app_context):
     period_label = tk.Label(
     period_bar,
     textvariable=period_var,
-    font=("Arial", 10, "bold"))
+    font=("Arial", 13, "bold"))
     period_label.pack(padx=25)
 
         
@@ -163,7 +168,22 @@ def build_repayments_view(parent, app_context):
     tree.column("reference", width=100)
 
     tree.pack(fill="both", expand=True, padx=15, pady=10)
-    
+
+    # Mock XML 
+    repayment_xml_map = {}
+
+    def mock_generate_xml(repayment_id, loan_id, amount, date, method, reference):
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
+    <repaymentReceipt>
+        <repaymentId>{repayment_id}</repaymentId>
+        <loanId>{loan_id}</loanId>
+        <amount>{amount}</amount>
+        <date>{date}</date>
+        <method>{method}</method>
+        <reference>{reference}</reference>
+    </repaymentReceipt>
+    """
+
 
     def on_add_application():
         popup = tk.Toplevel(frame)
@@ -184,39 +204,110 @@ def build_repayments_view(parent, app_context):
         reference_entry = tk.Entry(popup)
         reference_entry.pack()
 
+        tk.Label(popup, text="Source").pack(pady=5)
+        source_entry = tk.Entry(popup)
+        source_entry.pack()
+
+        tk.Label(popup, text="Notes").pack(pady=5)
+        notes_entry = tk.Entry(popup)
+        notes_entry.pack()
+
         def save_application():
+            today = date.today()
             amount = amount_entry.get()
             method = method_entry.get()
             reference = reference_entry.get()
-            today = date.today()
+            source = source_entry.get()
+            notes = notes_entry.get()
+            loan_id = get_selected_loan()
 
-            if not (amount and method and reference):
+            if not (amount and method and reference and source and notes):
                 return
             
-            tree.insert("", "end", values=("", today, amount, method, reference))
+            item_id = tree.insert("", "end", values=("", today, amount, method, reference))
+
+            repayment_xml_map[item_id] = mock_generate_xml(
+                item_id ,loan_id, amount, today, method, reference
+            )
             popup.destroy()
 
         tk.Button(popup, text="Save", width=10, command=save_application).pack(pady=15) 
     
     tk.Button(add_repayment_holder, text="Add Repayment", width=15, command=on_add_application).pack(anchor="w",padx=8, pady=20)
 
+    # Receipt XML container
     receipt_frame = tk.LabelFrame(frame, text="Receipt / Details", padx=10, pady=10)
     receipt_frame.pack(fill="x", padx=15, pady=10)
 
-    tk.Label(receipt_frame, text="Select a repayment to view details").pack()
+    receipt_text = tk.Text(receipt_frame, height=10, wrap="none")
+    receipt_text.pack(fill="both", expand=True)
 
-
-
+    receipt_text.config(state="disabled")
 
     
+    # Select recrod display XML
+    def on_repayment_select(event):
+        selected = tree.selection()
+        if not selected:
+            return
+
+        xml = repayment_xml_map.get(selected[0])
+
+        receipt_text.config(state="normal")
+        receipt_text.delete("1.0", "end")
+        receipt_text.insert("end", xml if xml else "No receipt available")
+        receipt_text.config(state="disabled")
+
+    tree.bind("<<TreeviewSelect>>", on_repayment_select)
+
+    # Export XML
+    def export_receipt():
+        selected = tree.selection()
+
+        if not selected:
+            messagebox.showwarning(
+                "No selection",
+                "Please select a repayment to export."
+            )
+            return
+        
+        if selected:
+            item_id = selected[0]
+            xml = repayment_xml_map.get(item_id)
+
+        if not xml:
+            messagebox.showwarning(
+                "No receipt",
+                "No XML receipt available for this repayment."
+            )
+            return
+
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".xml",
+            filetypes=[("XML files", "*.xml")],
+            title="Export repayment receipt"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(xml)
+
+            messagebox.showinfo(
+                "Export successful",
+                "Receipt exported successfully."
+            )
+
+        except Exception as e:
+            messagebox.showerror(
+                "Export failed",
+                f"Failed to export XML:\n{e}"
+            )
+
+    tk.Button(frame, text="Export XML", width=15, command=export_receipt).pack(side="right",anchor="e", pady=5)
 
 
 
 
-     # Return flow
-    def on_return_click():
-        app_context["frames"]["main"].tkraise()
-    
-    footer = tk.Frame(frame)
-    footer.pack(fill="x", padx=15, pady=10)
-    tk.Button(footer, text="Return", width=15, command=on_return_click).pack(anchor="se")
