@@ -12,7 +12,7 @@ from ui.customer_view import build_customers_view
 def main():
     root = tk.Tk()
     root.title("Micro Finance Management System")
-    root.geometry("1000x600")
+    root.geometry("1000x800")
 
     
     # db connection
