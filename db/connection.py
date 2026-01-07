@@ -7,8 +7,6 @@ class Database:
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
     
-    #def __init__(self, db_path):
-    #    self.db_path = db_path
 
     def fetchall(self, query, params=()):
         cur = self.conn.cursor()

@@ -25,7 +25,7 @@ def build_products_view(parent, app_context):
     search_entry.pack(side="left", padx=5)
 
     # Creating Table
-    columns = ("id", "name", "rate", "minAmount", "maxAmount", "fees", "minTerm", "maxTerm")
+    columns = ("id", "name", "rate", "minAmount", "maxAmount", "termRange", "fees", "minTerm", "maxTerm")
 
     tree = ttk.Treeview(frame, columns=columns, show="headings")
 
@@ -34,6 +34,7 @@ def build_products_view(parent, app_context):
     tree.heading("rate", text="Interest Rate %")
     tree.heading("minAmount", text="Minimum Amount")
     tree.heading("maxAmount", text="Maximum Amount")
+    tree.heading("termRange", text="Loan Term Range")
     tree.heading("fees", text="Fees £")
     tree.heading("minTerm", text="Minimum Term")
     tree.heading("maxTerm", text="Maximum Term")
@@ -43,6 +44,7 @@ def build_products_view(parent, app_context):
     tree.column("rate", width=100)
     tree.column("minAmount", width=100)
     tree.column("maxAmount", width=100)
+    tree.column("termRange", width=80)
     tree.column("fees", width=100)
     tree.column("minTerm", width=100)
     tree.column("maxTerm", width=100)
@@ -59,6 +61,7 @@ def build_products_view(parent, app_context):
                 row["interestRate"],
                 row["minAmount"],
                 row["maxAmount"],
+                row["loanTermRange"],
                 row["fees"],
                 row["minLoanTermMonths"],
                 row["maxLoanTermMonths"]
@@ -89,6 +92,10 @@ def build_products_view(parent, app_context):
         maxAmount_entry = tk.Entry(popup)
         maxAmount_entry.pack()
 
+        tk.Label(popup, text="Loan Term Range").pack(pady=5)
+        termRange_entry = tk.Entry(popup)
+        termRange_entry.pack()
+
         tk.Label(popup, text="Fees").pack(pady=5)
         fees_entry = tk.Entry(popup)
         fees_entry.pack()
@@ -102,22 +109,22 @@ def build_products_view(parent, app_context):
         maxTerm_entry.pack()
 
         def save_product():
-            name = name_entry.get()
-            rate = rate_entry.get()
-            minAmout = minAmount_entry.get()
-            maxAmount = maxAmount_entry.get()
-            fees = fees_entry.get()
-            minTerm = minTerm_entry.get()
-            maxTerm = maxTerm_entry.get()
+            try:
+                product_service.create_product(
+                    name_entry.get(),
+                    float(rate_entry.get()),
+                    float(minAmount_entry.get()),
+                    float(maxAmount_entry.get()),
+                    termRange_entry.get(),
+                    float(fees_entry.get()),
+                    minTerm_entry.get(),
+                    maxTerm_entry.get()
+                )
+                load_products()
+                popup.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
 
-            
-
-            if not (name and rate and minAmout and maxAmount and fees and minTerm and maxTerm):
-                return
-            
-            tree.insert("","end",values=("", name, rate, minAmout, maxAmount, fees, minTerm, maxTerm))
-            print("SAVED")
-            popup.destroy()
 
         tk.Button(popup, text="Save", width=10, command=save_product).pack(pady=15)
 
@@ -140,8 +147,11 @@ def build_products_view(parent, app_context):
         if not confirm:
             return
         
-        for item in selected:
-            tree.delete(item)
+        item_id = selected[0]
+        product_id = tree.item(item_id, "values")[0]  # PK column
+
+        product_service.delete_product(product_id)
+        tree.delete(item_id)
 
     def on_edit_product():
 
@@ -150,12 +160,15 @@ def build_products_view(parent, app_context):
         if not selected:
             messagebox.showwarning(
                 title="No selection",
-                message="Please select a product to delete"
+                message="Please select a product to edit"
             )
             return
         
         item_id = selected[0]
         values = tree.item(item_id, "values")
+
+        product_id = values[0]  
+
 
         popup = tk.Toplevel(frame)
         popup.title("Edit Product")
@@ -163,35 +176,74 @@ def build_products_view(parent, app_context):
         popup.transient(frame)
         popup.grab_set()
 
-        def labeled_entry(label, value):
-            tk.Label(popup, text=label).pack(pady=3)
-            e = tk.Entry(popup)
-            e.insert(0, value)
-            e.pack()
-            return e
+        tk.Label(popup, text="Product Name").pack(pady=5)
+        name_entry = tk.Entry(popup)
+        name_entry.insert(0, values[1])
+        name_entry.pack()
 
-        name_entry = labeled_entry("Product Name", values[1])
-        rate_entry = labeled_entry("Interest Rate %", values[2])
-        minAmount_entry = labeled_entry("Minimum Amount", values[3])
-        maxAmount_entry = labeled_entry("Maximum Amount", values[4])
-        fees_entry = labeled_entry("Fees", values[5])
-        minTerm_entry = labeled_entry("Minimum Term", values[6])
-        maxTerm_entry = labeled_entry("Maximum Term", values[7])
+        tk.Label(popup, text="Interest Rate %").pack(pady=5)
+        rate_entry = tk.Entry(popup)
+        rate_entry.insert(0, values[2])
+        rate_entry.pack()
+
+        tk.Label(popup, text="Minimum Amount").pack(pady=5)
+        minAmount_entry = tk.Entry(popup)
+        minAmount_entry.insert(0, values[3])
+        minAmount_entry.pack()
+
+        tk.Label(popup, text="Maximum Amount").pack(pady=5)
+        maxAmount_entry = tk.Entry(popup)
+        maxAmount_entry.insert(0, values[4])
+        maxAmount_entry.pack()
+
+        tk.Label(popup, text="Loan Term Range").pack(pady=5)
+        termRange_entry = tk.Entry(popup)
+        termRange_entry.insert(0, values[5])
+        termRange_entry.pack()
+
+        tk.Label(popup, text="Fees").pack(pady=5)
+        fees_entry = tk.Entry(popup)
+        fees_entry.insert(0, values[6])
+        fees_entry.pack()
+
+        tk.Label(popup, text="Minimum Term").pack(pady=5)
+        minTerm_entry = tk.Entry(popup)
+        minTerm_entry.insert(0, values[7])
+        minTerm_entry.pack()
+
+        tk.Label(popup, text="Maximum Term").pack(pady=5)
+        maxTerm_entry = tk.Entry(popup)
+        maxTerm_entry.insert(0, values[8])
+        maxTerm_entry.pack()
+
 
         def save_changes():
-            tree.item(
-                item_id,
-                values=(
-                    values[0],
+            product_service.update_product(
+                    product_id,
                     name_entry.get(),
                     rate_entry.get(),
                     minAmount_entry.get(),
                     maxAmount_entry.get(),
+                    termRange_entry.get(),
                     fees_entry.get(),
                     minTerm_entry.get(),
                     maxTerm_entry.get()
                 )
-            )
+           
+
+            tree.item(item_id, values=(
+                product_id,
+                name_entry.get(),
+                rate_entry.get(),
+                minAmount_entry.get(),
+                maxAmount_entry.get(),
+                termRange_entry.get(),
+                fees_entry.get(),
+                minTerm_entry.get(),
+                maxTerm_entry.get()
+
+            ))
+
             popup.destroy()
 
         tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack(pady=15)
