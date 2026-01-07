@@ -3,10 +3,13 @@ from tkinter import ttk
 from tkinter import messagebox
 
 
+
 def build_products_view(parent, app_context):
     frame = tk.Frame(parent)
     app_context["frames"]["products"] = frame
     frame.grid(row=0, column=0, sticky="nsew")
+
+    product_service = app_context["services"]["product"]
 
     # Title
     tk.Label(frame, text="Product Management", font=("Arial", 18, "bold")).pack(anchor="w", padx=15, pady=(10,5))
@@ -24,7 +27,7 @@ def build_products_view(parent, app_context):
     # Creating Table
     columns = ("id", "name", "rate", "minAmount", "maxAmount", "fees", "minTerm", "maxTerm")
 
-    tree = ttk.Treeview(frame, columns=columns, show="headings", height=10)
+    tree = ttk.Treeview(frame, columns=columns, show="headings")
 
     tree.heading("id", text="ID")
     tree.heading("name", text="Product Name")
@@ -35,17 +38,33 @@ def build_products_view(parent, app_context):
     tree.heading("minTerm", text="Minimum Term")
     tree.heading("maxTerm", text="Maximum Term")
 
-    tree.column("id", width=50, anchor="center")
+    tree.column("id", width=50)
     tree.column("name", width=180)
-    tree.column("rate", width=100, anchor="center")
-    tree.column("minAmount", width=100, anchor="center")
-    tree.column("maxAmount", width=100, anchor="center")
-    tree.column("fees", width=100, anchor="center")
-    tree.column("minTerm", width=100, anchor="center")
-    tree.column("maxTerm", width=100, anchor="center")
+    tree.column("rate", width=100)
+    tree.column("minAmount", width=100)
+    tree.column("maxAmount", width=100)
+    tree.column("fees", width=100)
+    tree.column("minTerm", width=100)
+    tree.column("maxTerm", width=100)
 
     tree.pack(fill="both", expand=True, padx=15, pady=10)
 
+    # Load all products
+    def load_products():
+        tree.delete(*tree.get_children())
+        for row in product_service.get_all_products():
+            tree.insert("", "end", values=(
+                row["product_id"],
+                row["product_name"],
+                row["interestRate"],
+                row["minAmount"],
+                row["maxAmount"],
+                row["fees"],
+                row["minLoanTermMonths"],
+                row["maxLoanTermMonths"]
+
+            ))
+   
     # Add and Save product to list
     def on_add_product():
         popup = tk.Toplevel(frame)
@@ -193,3 +212,5 @@ def build_products_view(parent, app_context):
         app_context["frames"]["main"].tkraise()
     
     tk.Button(frame, text="Return", width=15, command=on_return_click).pack(anchor="se", padx=15, pady=15)
+
+    load_products()
