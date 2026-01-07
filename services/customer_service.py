@@ -1,3 +1,3 @@
 class CustomerService:
-    def __init__(self):
-        pass
+    def __init__(self, db):
+        self.db = db

@@ -7,7 +7,7 @@ class ProductService:
         SELECT product_id, product_name, interestRate, minAmount, maxAmount, fees, minLoanTermMonths, maxLoanTermMonths
         FROM product;
         """
-        return self.db.fetch_all(query)
+        return self.db.fetchall(query)
     
     def create_product(self, name, interestRate, minAmount, maxAmount, fees, minLoanTermMonths, maxLoanTermMonths):
         if not name and interestRate and minAmount and maxAmount and fees and minLoanTermMonths and maxLoanTermMonths:
