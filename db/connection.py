@@ -1,11 +1,17 @@
 import sqlite3
 
-def get_connection():
-    db_path = 'C:\\Micro Finance App\\microfinance.db'
+class Database:
+
+    def _init_(self, path):
+        self.conn = sqlite3.connect(path)
+        self.conn.row_factory = sqlite3.Row
+
+    def fetchall(self, query, params=()):
+        cur = self.conn.cursor()
+        cur.execute(query, params)
+        return cur.fetchall()
     
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-
-    conn.execute("PRAGMA foreign_keys = ON")
-
-    return conn
+    def execute(self, query, params=()):
+        cur = self.conn.cursor()
+        cur.execute(query, params)
+        self.conn.commit()
