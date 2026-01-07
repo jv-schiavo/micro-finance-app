@@ -9,14 +9,23 @@ from ui.application_view import build_applications_view
 from ui.report_view import build_reports_view
 from ui.customer_view import build_customers_view
 
+from db.connection import Database
+from services.product_service import ProductService
+from services.repayment_service import RepaymentService
+from services.application_service import ApplicationService
+from services.auth_service import AuthService
+from services.customer_service import CustomerService
+from services.report_service import ReportService 
+
+DB_PATH = "microfinance.db"
+
+db = Database(DB_PATH)
+
 def main():
     root = tk.Tk()
     root.title("Micro Finance Management System")
     root.geometry("1000x800")
 
-    
-    # db connection
-    conn = get_connection()
 
     # Main container
     container = tk.Frame(root)
@@ -31,8 +40,16 @@ def main():
     # Shared app state
     frames = {}
     app_context = {
-        "db": conn,
-        "frames": frames
+        "frames": frames,
+        "services": {
+            "product": ProductService(db),
+            "repayment": RepaymentService(db),
+            "application": ApplicationService(db),
+            "auth": AuthService(db),
+            "customer": CustomerService(db),
+            "report": ReportService(db)
+
+        }
     }
 
     # Build screens
