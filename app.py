@@ -2,7 +2,6 @@ import tkinter as tk
 
 from ui.login_view import build_login_view
 from ui.main_menu_view import build_main_menu_view
-from db.connection import get_connection
 from ui.product_view import build_products_view
 from ui.repayment_view import build_repayments_view
 from ui.application_view import build_applications_view
