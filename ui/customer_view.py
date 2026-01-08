@@ -13,6 +13,8 @@ def build_customers_view(parent, app_context):
     app_context["frames"]["customers"] = frame
     frame.grid(row=0, column=0, sticky="nsew")
 
+    customer_service = app_context["services"]["customer"]
+
     # Title
     tk.Label(frame, text="Customers", font=("Arial", 18, "bold")).pack(anchor="w", padx=15, pady=(10,5))
 
@@ -96,6 +98,18 @@ def build_customers_view(parent, app_context):
         id_preview.image = photo
 
     tree.bind("<<TreeviewSelect>>", on_customer_select)
+
+    def load_customer():
+        tree.delete(*tree.get_children())
+        for row in customer_service.get_all_customers():
+            tree.insert("", "end", values=(
+                row["customer_id"],
+                row["name"],
+                row["DOB"],
+                row["address"],
+                row["phone"],
+                row["nationalID"]
+            ))
 
     
     # Add and Save application to list
@@ -273,4 +287,5 @@ def build_customers_view(parent, app_context):
     def on_return_click():
         app_context["frames"]["main"].tkraise()
     
+    load_customer()
     tk.Button(toolbar, text="Return", width=10, command=on_return_click).pack(side="right")
