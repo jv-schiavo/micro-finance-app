@@ -101,15 +101,19 @@ def build_customers_view(parent, app_context):
 
     def load_customer():
         tree.delete(*tree.get_children())
-        for row in customer_service.get_all_customers():
-            tree.insert("", "end", values=(
-                row["customer_id"],
-                row["name"],
-                row["DOB"],
-                row["address"],
-                row["phone"],
-                row["nationalID"]
+        customer_images.clear()
+
+        rows = customer_service.get_all_customers()
+
+        for row in rows:
+            customer_id, name, DOB, address, phone, nationalID, nationalIDPhoto = row
+            
+            item_id = tree.insert("", "end", values=(
+                customer_id, name, DOB, address, phone, nationalID
             ))
+
+            if nationalIDPhoto:
+                customer_images[item_id] = nationalIDPhoto
 
     
     # Add and Save application to list
@@ -178,31 +182,36 @@ def build_customers_view(parent, app_context):
         tk.Button(popup, text="Upload Image", command=upload_image).pack(pady=5)
 
         def save_customer():
-            name = name_entry.get()
-            dob = dob_entry.get()
-            address = address_entry.get()
-            phone = phone_entry.get()
-            national = national_entry.get()
-
-            if not (name and dob and address and phone and national):
-                messagebox.showwarning("Missing data", "All fields are required.")
-                return
-
-            if not image_bytes:
-                messagebox.showwarning(
-                    "Missing document",
-                    "National ID photo is required."
+            try:
+                customer_service.create_customer(
+                    name_entry.get(),
+                    dob_entry.get(),
+                    address_entry.get(),
+                    phone_entry.get(),
+                    national_entry.get(),
+                    image_bytes
                 )
-                return
+                load_customer()
+                popup.destroy()
+            
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+            
 
-            item_id = tree.insert(
-                "",
-                "end",
-                values=("", name, dob, address, phone, national)
-            )
-            print("Saved")
-            customer_images[item_id] = image_bytes
-            popup.destroy()
+            #if not image_bytes:
+            #    messagebox.showwarning(
+            #        "Missing document",
+            #        "National ID photo is required."
+            #    )
+            #    return
+
+            #item_id = tree.insert(
+             #   "",
+              #  "end",
+               # values=("", name_entry, dob_entry, address_entry, phone_entry, national_entry)
+            #)
+            #print("Saved")
+            #customer_images[item_id] = image_bytes
 
 
         tk.Button(popup, text="Save", width=10, command=save_customer).pack(pady=15)   
