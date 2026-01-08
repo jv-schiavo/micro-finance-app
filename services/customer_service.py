@@ -21,14 +21,14 @@ class CustomerService:
 
         self.db.execute(query,(name, DOB, address, phone, nationalID, nationalIDPhoto))
 
-    def update_customer(self, name, address, phone):
+    def update_customer(self, customer_id, name, address, phone):
         query = """
         UPDATE customer
         SET name = ?, address = ?, phone = ?
         WHERE customer_id = ? 
         """
 
-        self.db.execute(query, (name, address, phone))
+        self.db.execute(query, (name, address, phone, customer_id))
 
     def delete_customer(self, customer_id):
         query = """

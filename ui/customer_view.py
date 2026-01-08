@@ -196,24 +196,7 @@ def build_customers_view(parent, app_context):
             
             except Exception as e:
                 messagebox.showerror("Error", str(e))
-            
-
-            #if not image_bytes:
-            #    messagebox.showwarning(
-            #        "Missing document",
-            #        "National ID photo is required."
-            #    )
-            #    return
-
-            #item_id = tree.insert(
-             #   "",
-              #  "end",
-               # values=("", name_entry, dob_entry, address_entry, phone_entry, national_entry)
-            #)
-            #print("Saved")
-            #customer_images[item_id] = image_bytes
-
-
+    
         tk.Button(popup, text="Save", width=10, command=save_customer).pack(pady=15)   
 
     def on_edit_customer():
@@ -230,35 +213,47 @@ def build_customers_view(parent, app_context):
         item_id = selected[0]
         values = tree.item(item_id, "values")
 
+        customer_id = values[0]
+
         popup = tk.Toplevel(frame)
         popup.title("Edit Product")
         popup.geometry("350x450")
         popup.transient(frame)
         popup.grab_set()
 
-        def labeled_entry(label, value):
-            tk.Label(popup, text=label).pack(pady=3)
-            e = tk.Entry(popup)
-            e.insert(0, value)
-            e.pack()
-            return e
+        tk.Label(popup, text="Customer Name").pack(pady=5)
+        name_entry = tk.Entry(popup)
+        name_entry.insert(0, values[1])
+        name_entry.pack()
 
-        name_entry = labeled_entry("Customer Name", values[1])
-        address_entry = labeled_entry("Address", values[3])
-        phone_entry = labeled_entry("Phone Number", values[4])
+        tk.Label(popup, text="Address").pack(pady=5)
+        address_entry = tk.Entry(popup)
+        address_entry.insert(0, values[3])
+        address_entry.pack()
+
+        tk.Label(popup, text="Phone").pack(pady=5)
+        phone_entry = tk.Entry(popup)
+        phone_entry.insert(0, values[4])
+        phone_entry.pack()
+
 
         def save_changes():
-            tree.item(
-                item_id,
-                values=(
-                    values[0],
+            customer_service.update_customer(
+                    customer_id,
                     name_entry.get(),
-                    values[2],
                     address_entry.get(),
-                    phone_entry.get(),
-                    values[5]
-                )
+                    phone_entry.get()
             )
+
+            tree.item(item_id, values=(
+                customer_id,
+                name_entry.get(),
+                values[2],
+                address_entry.get(),
+                phone_entry.get(),
+                values[5]
+            ))
+        
             popup.destroy()
 
         tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack(pady=15)
@@ -281,9 +276,11 @@ def build_customers_view(parent, app_context):
         if not confirm:
             return
         
-        for item in selected:
-            customer_images.pop(item, None)
-            tree.delete(item)
+        item_id = selected[0]
+        customer_id = tree.item(item_id,"values")[0]
+
+        customer_service.delete_customer(customer_id)
+        tree.delete(item_id)
 
         id_preview.config(image="")
         id_preview.image = None      
