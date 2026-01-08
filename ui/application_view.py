@@ -8,6 +8,9 @@ def build_applications_view(parent, app_context):
 
     frame.grid(row=0, column=0, sticky="nsew")
 
+    application_service = app_context["services"]["application"]
+
+
     # Title
     tk.Label(frame, text="Applications", font=("Arial", 18, "bold")).pack(anchor="w", padx=15, pady=(10,5))
 
@@ -21,33 +24,51 @@ def build_applications_view(parent, app_context):
     search_entry.pack(side="left", padx=5)
 
     # Creating Table
-    columns = ("id", "name", "product name", "income", "job position", "credit score", "amount requested", "loan purpose", "officer notes", "loan term")
+    columns = ("id", "name", "product name", "date", "income", "job position", "credit score", "amount requested", "loan purpose", "status", "officer notes", "loan term")
 
     tree = ttk.Treeview(frame, columns=columns, show="headings", height=10)
 
     tree.heading("id", text="ID")
     tree.heading("name", text="Customer Name")
     tree.heading("product name", text="Product Name")
+    tree.heading("date", text="Application Date")
     tree.heading("income", text="Income £")
     tree.heading("job position", text="Job Position")
     tree.heading("credit score", text="Credit Score")
     tree.heading("amount requested", text="Amount Requested £")
     tree.heading("loan purpose", text="Loan Purpose")
+    tree.heading("status", text="Status")
     tree.heading("officer notes", text="Officer Notes")
     tree.heading("loan term", text="Loan Term (months)")
 
     tree.column("id", width=25)
     tree.column("name", width=150)
     tree.column("product name", width=100)
+    tree.column("date")
     tree.column("income", width=100)
     tree.column("job position", width=100)
     tree.column("credit score", width=100)
     tree.column("amount requested", width=100)
     tree.column("loan purpose", width=150)
+    tree.column("status", width=100)
     tree.column("officer notes", width=150)
     tree.column("loan term", width=100)
 
     tree.pack(fill="both", expand=True, padx=15, pady=10)
+
+    def load_applications():
+        tree.delete(*tree.get_children())
+
+        rows = application_service.get_all_applications()
+
+        for row in rows:
+            (application_id, customer_name, product_name, date, income, jobPosition, creditScore, amountRequested, loanPurpose, status, officerNotes, loanTermRequested, *_) = row
+
+            item_id = tree.insert("", "end", values=(
+                application_id, customer_name, product_name, date, income, jobPosition, creditScore, amountRequested, loanPurpose, status, officerNotes, loanTermRequested
+            ))
+    
+
 
     # Add and Save application to list
     def on_add_application():
@@ -203,3 +224,4 @@ def build_applications_view(parent, app_context):
         app_context["frames"]["main"].tkraise()
     
     tk.Button(frame, text="Return", width=15, command=on_return_click).pack(anchor="se", padx=15, pady=15)
+    load_applications()
