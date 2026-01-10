@@ -23,3 +23,8 @@ class Database:
         cur.execute(query, params)
         self.conn.commit()
         return cur.lastrowid
+    
+    def fetchone(self,query,params=()):
+        cur = self.conn.cursor()
+        cur.execute(query,params)
+        return cur.fetchone()

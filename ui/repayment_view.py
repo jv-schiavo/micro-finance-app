@@ -49,7 +49,7 @@ def build_repayments_view(parent, app_context):
     display_values = []
 
     for loan_id, name, amount, status in loans:
-        display = f"{loan_id} | {name} | £{amount} | {status}"
+        display = f"{loan_id} - {name} - £{amount} - {status}"
         display_values.append(display)
         loan_map[display] = loan_id
 
@@ -62,10 +62,13 @@ def build_repayments_view(parent, app_context):
     info_label = tk.Label(loan_bar, textvariable=loan_var, font=("Arial", 13,"bold"))
     info_label.pack(anchor="w", padx=15, pady=10)
 
-    # Debugger
     def on_loan_selected(event):
-        loan = get_selected_loan()
-        return loan
+        loan_id = get_selected_loan()
+        if loan_id:
+            load_repayments(loan_id)
+
+    loan_combo.bind("<<ComboboxSelected>>", on_loan_selected)
+
 
 
     # Button to add repayments manually
@@ -94,30 +97,19 @@ def build_repayments_view(parent, app_context):
 
     tree.pack(fill="both", expand=True, padx=15, pady=10)
 
-    def load_repayments():
+    def load_repayments(loan_id):
         tree.delete(*tree.get_children())
 
         rows = repayment_service.get_all_repayments(get_selected_loan())
     
         for row in rows:
-            
-            item_id = tree.insert("", "end", values=row)
-
-    # Mock XML 
-    repayment_xml_map = {}
-
-    def mock_generate_xml(repayment_id, loan_id, amount, date, method, reference):
-        return f"""<?xml version="1.0" encoding="UTF-8"?>
-    <repaymentReceipt>
-        <repaymentId>{repayment_id}</repaymentId>
-        <loanId>{loan_id}</loanId>
-        <amount>{amount}</amount>
-        <date>{date}</date>
-        <method>{method}</method>
-        <reference>{reference}</reference>
-    </repaymentReceipt>
-    """
-
+            tree.insert("", "end", values=(
+                row["repayment_id"],
+                row["repayment_date"],
+                row["repayment_amount"],
+                row["payment_method"],
+                row["external_reference"]
+            ))
 
     def on_add_repayment():
         popup = tk.Toplevel(frame)
@@ -163,7 +155,7 @@ def build_repayments_view(parent, app_context):
                 )
                 tree.insert("", "end", values=(repayment_id, date_entry.get(),
                 amount_entry.get(),method_entry.get(),reference_entry.get()))
-                load_repayments()
+                load_repayments(loan_id)
                 
             
             except Exception as e:
@@ -171,10 +163,6 @@ def build_repayments_view(parent, app_context):
             
             item_id = tree.insert("", "end", values=(date_entry.get(), 
                 amount, method_entry.get(), reference_entry.get()))
-
-            repayment_xml_map[item_id] = mock_generate_xml(
-                item_id ,loan_id, amount, date_entry.get(), method_entry.get(), reference_entry.get()
-            )
             popup.destroy()
 
         tk.Button(popup, text="Save", width=10, command=save_repayment).pack(pady=15) 
@@ -197,11 +185,12 @@ def build_repayments_view(parent, app_context):
         if not selected:
             return
 
-        xml = repayment_xml_map.get(selected[0])
+        repayment_id = tree.item(selected[0], "values")[0]
+        xml = repayment_service.generate_repayment_xml(repayment_id)
 
         receipt_text.config(state="normal")
         receipt_text.delete("1.0", "end")
-        receipt_text.insert("end", xml if xml else "No receipt available")
+        receipt_text.insert("end", xml or "No receipt available")
         receipt_text.config(state="disabled")
 
     tree.bind("<<TreeviewSelect>>", on_repayment_select)
@@ -218,8 +207,8 @@ def build_repayments_view(parent, app_context):
             return
         
         if selected:
-            item_id = selected[0]
-            xml = repayment_xml_map.get(item_id)
+            repayment_id = tree.item(selected[0], "values")[0]
+            xml = repayment_service.generate_repayment_xml(repayment_id)
 
         if not xml:
             messagebox.showwarning(
@@ -252,7 +241,7 @@ def build_repayments_view(parent, app_context):
                 f"Failed to export XML:\n{e}"
             )
 
-    load_repayments()
+    load_repayments(loan_id)
     tk.Button(frame, text="Export XML", width=15, command=export_receipt).pack(side="right",anchor="e", pady=5)
 
 
