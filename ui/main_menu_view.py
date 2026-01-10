@@ -23,6 +23,9 @@ def build_main_menu_view(parent, app_context):
     menu_button("Customers",
                 lambda: app_context["frames"]["customers"].tkraise()).pack(pady=6)
     
+    menu_button("Loans",
+                lambda: app_context["frames"]["loans"].tkraise()).pack(pady=6)
+    
     menu_button("Products",
         lambda: app_context["frames"]["products"].tkraise()).pack(pady=6)
 
@@ -31,6 +34,8 @@ def build_main_menu_view(parent, app_context):
 
     menu_button("Reports",
         lambda: app_context["frames"]["reports"].tkraise()).pack(pady=6)
+    
+    
 
     # Logout
     tk.Button(frame, text="Logout", width=12, command=lambda: app_context["frames"]["login"].tkraise()).place(relx=0.97, rely=0.05, anchor="ne")

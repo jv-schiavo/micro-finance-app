@@ -7,6 +7,7 @@ from ui.repayment_view import build_repayments_view
 from ui.application_view import build_applications_view
 from ui.report_view import build_reports_view
 from ui.customer_view import build_customers_view
+from ui.loan_view import build_loan_view
 
 from db.connection import Database
 from services.product_service import ProductService
@@ -59,6 +60,7 @@ def main():
     build_applications_view(container, app_context)
     build_reports_view(container, app_context)
     build_customers_view(container, app_context)
+    build_loan_view(container, app_context)
 
     # Show login first
     frames["login"].tkraise()
