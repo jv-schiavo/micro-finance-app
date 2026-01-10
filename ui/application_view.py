@@ -68,7 +68,7 @@ def build_applications_view(parent, app_context):
                 application_id, customer_name, product_name, date, income, jobPosition, creditScore, amountRequested, loanPurpose, status, officerNotes, loanTermRequested
             ))
     
-
+    ## TODO - MAKE CUSTOMER AND PRODUCT DROPDOWN
 
     # Add and Save application to list
     def on_add_application():
@@ -115,21 +115,24 @@ def build_applications_view(parent, app_context):
         term_entry.pack()
 
         def save_application():
-            name = name_entry.get()
-            product = product_entry.get()
-            income = income_entry.get()
-            job = job_entry.get()
-            credit = credit_entry.get()
-            amount = amount_entry.get()
-            purpose = purpose_entry.get()
-            notes = notes_entry.get()
-            term = term_entry.get()
+            try:
+                application_service.create_application(
+                    name_entry.get(),
+                    product_entry.get(),
+                    income_entry.get(),
+                    job_entry.get(),
+                    credit_entry.get(),
+                    amount_entry.get(),
+                    purpose_entry.get(),
+                    notes_entry.get(),
+                    term_entry.get()
+                )
 
-            if not (name and product and income and job and credit and amount and purpose and notes and term):
-                return
-            
-            tree.insert("", "end", values=("", name, product, income, job, credit, amount, purpose, notes, term))
-            popup.destroy()
+                load_applications()
+                popup.destroy()
+
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
 
         tk.Button(popup, text="Save", width=10, command=save_application).pack(pady=15)   
 
