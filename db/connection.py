@@ -17,3 +17,9 @@ class Database:
         cur = self.conn.cursor()
         cur.execute(query, params)
         self.conn.commit()
+
+    def execute_and_return_id(self, query, params=()):
+        cur = self.conn.cursor()
+        cur.execute(query, params)
+        self.conn.commit()
+        return cur.lastrowid

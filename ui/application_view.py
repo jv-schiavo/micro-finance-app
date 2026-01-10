@@ -144,7 +144,7 @@ def build_applications_view(parent, app_context):
         if not selected:
             messagebox.showwarning(
                 title="No selection",
-                message="Please select a product to delete"
+                message="Please select a application to delete"
             )
             return
         

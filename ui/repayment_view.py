@@ -9,6 +9,8 @@ def build_repayments_view(parent, app_context):
 
     frame.grid(row=0, column=0, sticky="nsew")
 
+    repayment_service = app_context["services"]["repayment"]
+
     tk.Label(frame, text="Repayments", font=("Arial", 18, "bold")).pack()
 
     # Return flow
@@ -65,83 +67,6 @@ def build_repayments_view(parent, app_context):
         loan = get_selected_loan()
         return loan
 
-    loan_combo.bind("<<ComboboxSelected>>", on_loan_selected)
-
-
-    # Period Filter
-    period_bar = tk.Frame(frame)
-    period_bar.pack(anchor="nw")
-
-    tk.Label(period_bar, text="Period:", font=("Arial", 12, "bold")).pack(side="left", padx=5)
-
-    period_var = tk.StringVar()
-
-    period_combo = ttk.Combobox(
-        period_bar,
-        textvariable=period_var,
-        state="readonly",
-        width=38
-    )
-    period_combo.pack(side="left")
-
-    periods = [
-        (""),
-        ("This month"),
-        ("Last month"),
-        ("Last 3 months"),
-        ("All")
-        
-    ]
-    
-    period_combo["values"] = periods
-
-    def get_selected_period():
-        selected = period_var.get()
-
-        today = date.today()
-
-        if selected == "This month":
-            start = today.replace(day=1)
-            end = today
-            print(start, end)
-
-        elif selected == "Last month":
-            first_day_this_month = today.replace(day=1)
-            end = first_day_this_month - timedelta(days=1)
-            start = end.replace(day=1)
-            print(start, end)
-
-        elif selected == "Last 3 months":
-            start = today - timedelta(days=90)
-            end = today
-            print(start, end)
-
-        elif selected == "All":
-            start = today - timedelta(days=1825)
-            end = today
-            print(start, end)
-
-        elif selected == "":
-            start = None
-            end = None
-            print()
-
-        return start, end  
-
-
-    def on_period_selected(event):
-        start, end = get_selected_period()
-        if start and end:
-            period_var.set(f"From {start} To {end}")
-
-    period_label = tk.Label(
-    period_bar,
-    textvariable=period_var,
-    font=("Arial", 13, "bold"))
-    period_label.pack(padx=25)
-
-        
-    period_combo.bind("<<ComboboxSelected>>", on_period_selected)
 
     # Button to add repayments manually
     add_repayment_holder = tk.Frame(frame)
@@ -169,6 +94,15 @@ def build_repayments_view(parent, app_context):
 
     tree.pack(fill="both", expand=True, padx=15, pady=10)
 
+    def load_repayments():
+        tree.delete(*tree.get_children())
+
+        rows = repayment_service.get_all_repayments(get_selected_loan())
+    
+        for row in rows:
+            
+            item_id = tree.insert("", "end", values=row)
+
     # Mock XML 
     repayment_xml_map = {}
 
@@ -185,12 +119,16 @@ def build_repayments_view(parent, app_context):
     """
 
 
-    def on_add_application():
+    def on_add_repayment():
         popup = tk.Toplevel(frame)
         popup.title("Add Repayment")
         popup.geometry("350x550")
         popup.transient(frame)
         popup.grab_set()
+
+        tk.Label(popup, text="Date").pack(pady=5)
+        date_entry = tk.Entry(popup)
+        date_entry.pack()
 
         tk.Label(popup, text="Amount").pack(pady=5)
         amount_entry = tk.Entry(popup)
@@ -212,28 +150,36 @@ def build_repayments_view(parent, app_context):
         notes_entry = tk.Entry(popup)
         notes_entry.pack()
 
-        def save_application():
-            today = date.today()
-            amount = amount_entry.get()
-            method = method_entry.get()
-            reference = reference_entry.get()
-            source = source_entry.get()
-            notes = notes_entry.get()
-            loan_id = get_selected_loan()
-
-            if not (amount and method and reference and source and notes):
-                return
+        def save_repayment():
+            try:
+                repayment_id = repayment_service.create_repayment(
+                    get_selected_loan(),
+                    date_entry.get(),
+                    amount_entry.get(),
+                    method_entry.get(),
+                    reference_entry.get(),
+                    source_entry.get(),
+                    notes_entry.get()
+                )
+                tree.insert("", "end", values=(repayment_id, date_entry.get(),
+                amount_entry.get(),method_entry.get(),reference_entry.get()))
+                load_repayments()
+                
             
-            item_id = tree.insert("", "end", values=("", today, amount, method, reference))
+            except Exception as e:
+                messagebox.showerror("Error", str(e))    
+            
+            item_id = tree.insert("", "end", values=(date_entry.get(), 
+                amount, method_entry.get(), reference_entry.get()))
 
             repayment_xml_map[item_id] = mock_generate_xml(
-                item_id ,loan_id, amount, today, method, reference
+                item_id ,loan_id, amount, date_entry.get(), method_entry.get(), reference_entry.get()
             )
             popup.destroy()
 
-        tk.Button(popup, text="Save", width=10, command=save_application).pack(pady=15) 
+        tk.Button(popup, text="Save", width=10, command=save_repayment).pack(pady=15) 
     
-    tk.Button(add_repayment_holder, text="Add Repayment", width=15, command=on_add_application).pack(anchor="w",padx=8, pady=20)
+    tk.Button(add_repayment_holder, text="Add Repayment", width=15, command=on_add_repayment).pack(anchor="w",padx=8, pady=20)
 
     # Receipt XML container
     receipt_frame = tk.LabelFrame(frame, text="Receipt / Details", padx=10, pady=10)
@@ -306,6 +252,7 @@ def build_repayments_view(parent, app_context):
                 f"Failed to export XML:\n{e}"
             )
 
+    load_repayments()
     tk.Button(frame, text="Export XML", width=15, command=export_receipt).pack(side="right",anchor="e", pady=5)
 
 
