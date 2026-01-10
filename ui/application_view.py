@@ -215,8 +215,11 @@ def build_applications_view(parent, app_context):
         if not confirm:
             return
         
-        for item in selected:
-            tree.delete(item)        
+        item_id = selected[0]
+        application_id = tree.item(item_id,"values")[0]
+
+        application_service.delete_application(application_id)
+        tree.delete(item_id)
 
     tk.Button(toolbar, text="Add", width=10, command=on_add_application).pack(side="left", padx=5)
     tk.Button(toolbar, text="Edit", width=10, command=on_edit_application).pack(side="left", padx=5)

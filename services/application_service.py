@@ -42,4 +42,4 @@ class ApplicationService:
         WHERE application_id = ?
         """
 
-        self.db.execute(query, application_id)
+        self.db.execute(query, (application_id,))
