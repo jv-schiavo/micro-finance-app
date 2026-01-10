@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import sqlite3
 
 def build_applications_view(parent, app_context):
     frame = tk.Frame(parent)
@@ -150,45 +151,48 @@ def build_applications_view(parent, app_context):
         item_id = selected[0]
         values = tree.item(item_id, "values")
 
+        application_id = values[0]
+
         popup = tk.Toplevel(frame)
-        popup.title("Edit Product")
-        popup.geometry("350x550")
+        popup.title("Edit Application")
+        popup.geometry("350x150")
         popup.transient(frame)
         popup.grab_set()
 
-        def labeled_entry(label, value):
-            tk.Label(popup, text=label).pack(pady=3)
-            e = tk.Entry(popup)
-            e.insert(0, value)
-            e.pack()
-            return e
+        # TODO - MAKE STATUS DROPDOWN ("Pending, "Approved", "Denied")
+        status_var = tk.StringVar()
 
-        name_entry = labeled_entry("Customer Name", values[1])
-        product_entry = labeled_entry("Product Name", values[2])
-        income_entry = labeled_entry("Income", values[3])
-        job_entry = labeled_entry("Job Position", values[4])
-        credit_entry = labeled_entry("Credit Score", values[5])
-        amount_entry = labeled_entry("Amount Requested", values[6])
-        purpose_entry = labeled_entry("Loan Purpose", values[7])
-        notes_entry = labeled_entry("Office Notes", values[8])
-        term_entry = labeled_entry("Term Requested", values[9])
+        status_combo = ttk.Combobox(
+            popup,
+            textvariable=status_var,
+            values=["Pending", "Approved", "Denied"],
+            state="readonly"
+        )
+        status_combo.pack(anchor="center", pady=50)
+        status_combo.set(values[9])
+
 
         def save_changes():
-            tree.item(
-                item_id,
-                values=(
-                    values[0],
-                    name_entry.get(),
-                    product_entry.get(),
-                    income_entry.get(),
-                    job_entry.get(),
-                    credit_entry.get(),
-                    amount_entry.get(),
-                    purpose_entry.get(),
-                    notes_entry.get(),
-                    term_entry.get()
+            try:
+                application_service.update_application(
+                    application_id,
+                    status_var.get(),   
                 )
-            )
+
+                tree.item(
+                    item_id,
+                    values=(
+                        application_id,
+                        status_var.get(),
+                    )
+                )
+                load_applications()
+                popup.destroy()
+
+            except sqlite3.IntegrityError as e:
+                messagebox.showerror("Approval denied, requests are putside scope of product", str(e))
+
+                
             popup.destroy()
 
         tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack(pady=15)

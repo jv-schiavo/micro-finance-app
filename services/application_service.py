@@ -16,7 +16,7 @@ class ApplicationService:
     
     def create_application(self, customer_id, product_id, income, jobPosition, creditScore, amountRequested, loanPurpose,
                             officerNotes, loanTermRequested):
-        now = date.today()
+        now = date.today().isoformat()
 
         query = """
         INSERT INTO application (customer_id, product_id, applicationDate, income, jobPosition, creditScore, amountRequested, loanPurpose,
@@ -27,7 +27,7 @@ class ApplicationService:
                            "Pending", now, officerNotes, loanTermRequested))
         
     def update_application(self, application_id, status):
-        now = date.today
+        now = date.today().isoformat()
         query = """
         UPDATE application
         SET status = ?, statusUpdateTime = ?
