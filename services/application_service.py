@@ -1,3 +1,5 @@
+from datetime import date
+
 class ApplicationService:
     def __init__(self, db):
         self.db = db
@@ -12,25 +14,27 @@ class ApplicationService:
         """
         return self.db.fetchall(query)
     
-    def create_application(self, customer_id, application_id, applicationDate, income, jobPosition, creditScore, amountRequested, loanPurpose,
-                           status, statusUpdateTime, officerNotes, loantermRequested):
-        ## Application MUST be created with only existing customers AND products
+    def create_application(self, customer_id, product_id, income, jobPosition, creditScore, amountRequested, loanPurpose,
+                            officerNotes, loanTermRequested):
+        now = date.today()
+
         query = """
-        INSERT INTO application (customer_id, application_id, applicationDate, income, jobPosition, creditScore, amountRequested, loanPurpose,
-                           status, statusUpdateTime, officerNotes, loantermRequested)
-        VALUES (?,?, DATE('now'), ?,?,?,?,?,'Pending', DATE('now'), ?, ?)
+        INSERT INTO application (customer_id, product_id, applicationDate, income, jobPosition, creditScore, amountRequested, loanPurpose,
+                           status, statusUpdateTime, officerNotes, loanTermRequested)
+        VALUES (?,?,?, ?,?,?,?,?,?,?, ?, ?)
         """
-        self.db.execute(query, (customer_id, application_id, applicationDate, income, jobPosition, creditScore, amountRequested, loanPurpose,
-                           status, statusUpdateTime, officerNotes, loantermRequested))
+        self.db.execute(query, (customer_id, product_id, now, income, jobPosition, creditScore, amountRequested, loanPurpose,
+                           "Pending", now, officerNotes, loanTermRequested))
         
-    def update_application(self, application_id, status, statusUpdateTime):
+    def update_application(self, application_id, status):
+        now = date.today
         query = """
         UPDATE application
-        SET status = ?, statusUpdateTime = DATE('now')
+        SET status = ?, statusUpdateTime = ?
         WHERE application_id = ?
         """
 
-        self.db.execute(query, (status, statusUpdateTime, application_id))
+        self.db.execute(query, (status, now, application_id))
 
     def delete_application(self, application_id):
         query = """
