@@ -3,15 +3,6 @@ from datetime import date
 class RepaymentService:
     def __init__(self, db):
         self.db = db
-
-    def get_all_repayments(self, loan_id):
-        query = """
-        SELECT repayment_id, loan_id, repayment_date, repayment_amount, payment_method, source, external_reference, notes, created_at
-        FROM repayment
-        WHERE loan_id = ?
-        ORDER BY repayment_date; 
-        """
-        return self.db.fetchall(query, (loan_id,))
     
     def create_repayment(self, loan_id, repayment_date, repayment_amount, payment_method, source, external_reference, notes):
         
@@ -44,3 +35,26 @@ class RepaymentService:
         <reference>{row["external_reference"]}</reference>
     </repaymentReceipt>
     """
+
+    def get_loans_for_repayments(self):
+        query = """
+        SELECT l.loan_id, c.name, l.loanStatus
+        FROM loan l
+        JOIN application a ON l.application_id = a.application_id
+        JOIN customer c ON a.customer_id = c.customer_id
+        ORDER BY l.loan_id;
+        """
+        return self.db.fetchall(query)
+    
+    def get_repayments_by_loan(self, loan_id):
+        query = """
+            SELECT repayment_id,
+                repayment_date,
+                repayment_amount,
+                payment_method,
+                external_reference
+            FROM repayment
+            WHERE loan_id = ?
+            ORDER BY repayment_date
+        """
+        return self.db.fetchall(query, (loan_id,))
