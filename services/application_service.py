@@ -1,4 +1,5 @@
 from datetime import date
+from services.loan_service import LoanService
 
 class ApplicationService:
     def __init__(self, db):
@@ -26,7 +27,7 @@ class ApplicationService:
         self.db.execute(query, (customer_id, product_id, now, income, jobPosition, creditScore, amountRequested, loanPurpose,
                            "Pending", now, officerNotes, loanTermRequested))
         
-    def update_application(self, application_id, status):
+    def update_application(self, application_id, new_status):
         now = date.today().isoformat()
         query = """
         UPDATE application
@@ -34,8 +35,15 @@ class ApplicationService:
         WHERE application_id = ?
         """
 
-        self.db.execute(query, (status, now, application_id))
-
+        self.db.execute(query, (new_status, now, application_id))
+        if new_status == "APPROVED":
+            exists = self.db.fetchone(
+            "SELECT 1 FROM loan WHERE application_id = ?",
+            (application_id,)
+        )
+            if not exists:
+                loan_service = LoanService(self.db)
+                loan_service.create_loan_from_application(application_id)
     def delete_application(self, application_id):
         query = """
         DELETE FROM application

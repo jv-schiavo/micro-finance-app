@@ -75,7 +75,7 @@ def build_applications_view(parent, app_context):
     def on_add_application():
         popup = tk.Toplevel(frame)
         popup.title("Add Application")
-        popup.geometry("350x550")
+        popup.geometry("350x650")
         popup.transient(frame)
         popup.grab_set()
 
@@ -144,7 +144,7 @@ def build_applications_view(parent, app_context):
         if not selected:
             messagebox.showwarning(
                 title="No selection",
-                message="Please select a application to delete"
+                message="Please select a application to edit"
             )
             return
         
@@ -159,7 +159,6 @@ def build_applications_view(parent, app_context):
         popup.transient(frame)
         popup.grab_set()
 
-        # TODO - MAKE STATUS DROPDOWN ("Pending, "Approved", "Denied")
         status_var = tk.StringVar()
 
         status_combo = ttk.Combobox(
@@ -195,7 +194,7 @@ def build_applications_view(parent, app_context):
                 
             popup.destroy()
 
-        tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack(pady=15)
+        tk.Button(popup, text="Save Changes", width=15, command=save_changes).pack()
 
     def on_delete_application():
 
