@@ -37,23 +37,18 @@ def build_repayments_view(parent, app_context):
     )
     loan_combo.pack(side="left")
 
-     # Temp Loan opt
-    loans = [
-        (1, "John Smith", 5000, "ACTIVE"),
-        (2, "John Smith", 2000, "CLOSED"),
-        (3, "Mary Jones", 3500, "ACTIVE"),
-    ] 
     
     loan_map = {}
 
-    display_values = []
+    rows = repayment_service.get_loans_for_repayments()
+    values = []
 
-    for loan_id, name, amount, status in loans:
-        display = f"{loan_id} - {name} - £{amount} - {status}"
-        display_values.append(display)
-        loan_map[display] = loan_id
+    for row in rows:
+        label = f'{row["loan_id"]} - {row["name"]} - {row["loanStatus"]}'
+        values.append(label)
+        loan_map[label] = row["loan_id"]
 
-    loan_combo["values"] = display_values
+    loan_combo["values"] = values
 
     def get_selected_loan():
         selected = loan_var.get()
@@ -64,12 +59,22 @@ def build_repayments_view(parent, app_context):
 
     def on_loan_selected(event):
         loan_id = get_selected_loan()
-        if loan_id:
-            load_repayments(loan_id)
+        if not loan_id:
+            return
+        
+        tree.delete(*tree.get_children())
+
+        rows = repayment_service.get_repayments_by_loan(loan_id)
+        for row in rows:
+            tree.insert("", "end", values=(
+                row["repayment_id"],
+                row["repayment_date"],
+                row["repayment_amount"],
+                row["payment_method"],
+                row["external_reference"]
+            ))
 
     loan_combo.bind("<<ComboboxSelected>>", on_loan_selected)
-
-
 
     # Button to add repayments manually
     add_repayment_holder = tk.Frame(frame)
@@ -98,9 +103,13 @@ def build_repayments_view(parent, app_context):
     tree.pack(fill="both", expand=True, padx=15, pady=10)
 
     def load_repayments(loan_id):
+        loan_id = get_selected_loan()
+        if not loan_id:
+            return
+        
         tree.delete(*tree.get_children())
 
-        rows = repayment_service.get_all_repayments(get_selected_loan())
+        rows = repayment_service.get_repayments_by_loan(get_selected_loan())
     
         for row in rows:
             tree.insert("", "end", values=(
@@ -143,9 +152,12 @@ def build_repayments_view(parent, app_context):
         notes_entry.pack()
 
         def save_repayment():
+            loan_id = get_selected_loan()
+            if not loan_id:
+                return
             try:
                 repayment_id = repayment_service.create_repayment(
-                    get_selected_loan(),
+                    loan_id,
                     date_entry.get(),
                     amount_entry.get(),
                     method_entry.get(),
@@ -161,8 +173,6 @@ def build_repayments_view(parent, app_context):
             except Exception as e:
                 messagebox.showerror("Error", str(e))    
             
-            item_id = tree.insert("", "end", values=(date_entry.get(), 
-                amount, method_entry.get(), reference_entry.get()))
             popup.destroy()
 
         tk.Button(popup, text="Save", width=10, command=save_repayment).pack(pady=15) 
@@ -241,7 +251,6 @@ def build_repayments_view(parent, app_context):
                 f"Failed to export XML:\n{e}"
             )
 
-    load_repayments(loan_id)
     tk.Button(frame, text="Export XML", width=15, command=export_receipt).pack(side="right",anchor="e", pady=5)
 
 
