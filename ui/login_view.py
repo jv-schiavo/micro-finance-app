@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 def build_login_view(parent, app_context):
     frame = tk.Frame(parent)
@@ -11,13 +12,24 @@ def build_login_view(parent, app_context):
     tk.Label(content, text="Login", font=("Arial", 18, "bold")).pack(pady=10)
 
     tk.Label(content, text="Username").pack()
-    tk.Entry(content, width=50).pack()
+
+    username_entry = tk.Entry(content, width=50)
+    username_entry.pack()
 
     tk.Label(content, text="Password").pack()
-    tk.Entry(content, show="*", width=50).pack()
+
+    password_entry = tk.Entry(content, show="*", width=50)
+    password_entry.pack()
 
     def on_login_click():
-        # No auth yet. Just prove navigation works.
+        auth = app_context["services"]["auth"]
+
+        user = auth.authenticate(username_entry.get(), password_entry.get())
+        if not user:
+            messagebox.showerror("Login failed", "Invalid username or password.")
+            return
+
+        app_context["session"]["user"] = user
         app_context["frames"]["main"].tkraise()
 
     tk.Button(content, text="Login", width=10, command=on_login_click).pack(pady=10)

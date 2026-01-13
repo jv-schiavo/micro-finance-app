@@ -50,7 +50,9 @@ def main():
             "customer": CustomerService(db),
             "report": ReportService(db),
             "loan": LoanService(db)
-
+        },
+        "session": {
+            "user": None
         }
     }
 
@@ -71,9 +73,5 @@ def main():
 
 if __name__ == "__main__":
     main()    
-
-
-
-
 
 
