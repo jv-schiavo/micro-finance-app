@@ -15,7 +15,8 @@ from services.repayment_service import RepaymentService
 from services.application_service import ApplicationService
 from services.auth_service import AuthService
 from services.customer_service import CustomerService
-from services.report_service import ReportService 
+from services.report_service import ReportService
+from services.loan_service import LoanService
 
 DB_PATH = "microfinance.db"
 
@@ -47,7 +48,8 @@ def main():
             "application": ApplicationService(db),
             "auth": AuthService(db),
             "customer": CustomerService(db),
-            "report": ReportService(db)
+            "report": ReportService(db),
+            "loan": LoanService(db)
 
         }
     }

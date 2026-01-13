@@ -11,16 +11,16 @@ def build_login_view(parent, app_context):
     tk.Label(content, text="Login", font=("Arial", 18, "bold")).pack(pady=10)
 
     tk.Label(content, text="Username").pack()
-    tk.Entry(content).pack()
+    tk.Entry(content, width=50).pack()
 
     tk.Label(content, text="Password").pack()
-    tk.Entry(content, show="*").pack()
+    tk.Entry(content, show="*", width=50).pack()
 
     def on_login_click():
         # No auth yet. Just prove navigation works.
         app_context["frames"]["main"].tkraise()
 
-    tk.Button(content, text="Login", width=15, command=on_login_click).pack(pady=10)
+    tk.Button(content, text="Login", width=10, command=on_login_click).pack(pady=10)
 
     
 

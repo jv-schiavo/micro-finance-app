@@ -1,5 +1,9 @@
 from datetime import date
+
 class LoanService:
+    def __init__(self, db):
+        self.db = db
+        
     def create_loan_from_application(self, application_id):
 
         existing = self.db.fetchone(
@@ -54,3 +58,17 @@ class LoanService:
             "Active",
             total_payable
         ))
+
+    def get_all_loans(self):
+        query = """
+        SELECT
+            l.loan_id,
+            c.name,
+            l.disbursementDate,
+            l.outstandingBalance,
+            l.total_payable
+        FROM loan l
+        JOIN application a ON l.application_id = a.application_id
+        JOIN customer c ON a.customer_id = c.customer_id;
+        """
+        return self.db.fetchall(query)
