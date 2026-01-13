@@ -1,100 +1,144 @@
 import tkinter as tk
 from tkinter import ttk
 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+
 def build_reports_view(parent, app_context):
     frame = tk.Frame(parent)
     app_context["frames"]["reports"] = frame
-
     frame.grid(row=0, column=0, sticky="nsew")
 
-    tk.Label(frame, text="Dashboard & Report", font=("Arial", 18, "bold")).pack()
+    report_service = app_context["services"]["report"]
 
-    dashboard_frame = tk.LabelFrame(frame, text="Loan Overview")
-    dashboard_frame.pack()
+    tk.Label(frame, text="Reports & Dashboard", font=("Arial", 18, "bold")).pack(pady=10)
+    tk.Button(frame, text="Return",width=15, command=lambda: app_context["frames"]["main"].tkraise()).pack(pady=10)
 
-    # Dashboard Table
-    dashboard_tree = ttk.Treeview(dashboard_frame, columns=("product", "total", "sum", "avg"), show="headings", height=10)
+    dashboard_frame = tk.LabelFrame(frame, text="Dashboard", padx=10, pady=10)
+    dashboard_frame.pack(fill="x", padx=15, pady=10)
 
-    dashboard_tree.heading("product", text="Product")
-    dashboard_tree.heading("total", text="Total Loans")
-    dashboard_tree.heading("sum", text="Total Issued")
-    dashboard_tree.heading("avg", text="Average Loan")
+    kpi_var = tk.StringVar(value="total_amount")
 
-    dashboard_tree.pack(fill="x")
+    kpi_frame = tk.Frame(dashboard_frame)
+    kpi_frame.pack(anchor="w", padx=10, pady=5)
 
+    tk.Radiobutton(
+        kpi_frame,
+        text="Total Amount Issued",
+        variable=kpi_var,
+        value="total_amount"
+    ).pack(side="left", padx=5)
 
-    ## separator
+    tk.Radiobutton(
+        kpi_frame,
+        text="Total Loans",
+        variable=kpi_var,
+        value="total_loans"
+    ).pack(side="left", padx=5)
 
-    ## filter ui to be done here
+    tk.Radiobutton(
+        kpi_frame,
+        text="Average Loan Amount",
+        variable=kpi_var,
+        value="avg_amount"
+    ).pack(side="left", padx=5)
 
-    filter_frame = tk.Frame(frame)
-    filter_frame.pack(fill="x", padx=15, pady=10)
+    fig = Figure(figsize=(8, 3.5), dpi=100)
+    ax = fig.add_subplot(111)
 
-    # product filter
-    product_frame = tk.Frame(filter_frame)
-    product_frame.pack(side="left", padx=10)
+    canvas = FigureCanvasTkAgg(fig, master=dashboard_frame)
+    canvas.get_tk_widget().pack(padx=10, pady=5)
+    canvas.draw()
 
-    tk.Label(product_frame, text="Product", font=("Arial", 12)).pack()
+    def refresh_chart():
+        ax.clear()
 
-    product_var = tk.StringVar()
+        rows = report_service.get_dashboard_data()
+
+        products = [r["product_name"] for r in rows]
+
+        if kpi_var.get() == "total_amount":
+            values = [r["total_amount_issued"] for r in rows]
+            title = "Total Amount Issued by Product"
+            ylabel = "Amount"
+
+        elif kpi_var.get() == "total_loans":
+            values = [r["total_loans"] for r in rows]
+            title = "Total Loans by Product"
+            ylabel = "Loans"
+
+        else:
+            values = [r["avg_loan_amount"] for r in rows]
+            title = "Average Loan Amount by Product"
+            ylabel = "Amount"
+
+        ax.bar(products, values)
+        ax.set_title(title)
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel("Product")
+        ax.tick_params(axis="x", rotation=25)
+
+        fig.tight_layout()
+        canvas.draw()
     
-    products_combo = ttk.Combobox(product_frame,textvariable=product_var, state="readonly", width=40)
-    products_combo.pack()
+    for widget in kpi_frame.winfo_children():
+        widget.config(command=refresh_chart)
 
-    products = [
-        ("Loan"),
-        ("Another loan"),
-        ("Loan Again"),
-        ("All")
-        
-    ]
-    
-    products_combo["values"] = products
-    products_combo.set("")
+    refresh_chart()
 
-
-    # Status Filter
-    status_frame = tk.Frame(filter_frame)
-    status_frame.pack(side="left", padx=10)
-
-    tk.Label(status_frame, text="Status", font=("Arial", 12)).pack()
-    status_var = tk.StringVar()
-    status_combo = ttk.Combobox(status_frame,textvariable=status_var, state="readonly", width=40)
-    status_combo.pack()
-
-    status_var = tk.StringVar()
-
-    status =  [
-        "All",
-        "ACTIVE",
-        "CLOSED"
-    ]
-
-    status_combo["values"] = status
-    status_combo.set("")
-
-    
-
-    report_frame = tk.LabelFrame(frame, text="Loan Report")
+    # REPORT 
+    report_frame = tk.LabelFrame(frame, text="Loan Report", padx=10,pady=10)
     report_frame.pack(fill="both", expand=True, padx=15, pady=10)
 
-    # Report Table
-    report_tree = ttk.Treeview(report_frame, columns=("loan_id", "name", "phone", "product", "app_date", "approval_date", "amount", "status"), show="headings",height=10)
+    build_loan_report_table(report_frame, report_service)    
 
-    report_tree.heading("loan_id", text="Loan ID")
-    report_tree.heading("name", text="Name")
-    report_tree.heading("phone", text="Phone Number")
-    report_tree.heading("product", text="Product Name")
-    report_tree.heading("app_date", text="Application Date")
-    report_tree.heading("approval_date", text="Date of Approval")
-    report_tree.heading("amount", text="Loan Amount")
-    report_tree.heading("status", text="Loan Status")
+def build_loan_report_table(parent, report_service):
+    columns = (
+        "loan_id",
+        "customer",
+        "product",
+        "application_date",
+        "approval_date",
+        "principal",
+    )
 
-    report_tree.pack(fill="both", expand=True)
+    tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
+
+    tree.heading("loan_id", text="Loan ID")
+    tree.heading("customer", text="Customer")
+    tree.heading("product", text="Product")
+    tree.heading("application_date", text="Application Date")
+    tree.heading("approval_date", text="Approval Date")
+    tree.heading("principal", text="Principal")
+
+    tree.column("loan_id", width=80, anchor="center")
+    tree.column("customer", width=160, anchor="center")
+    tree.column("product", width=140, anchor="center")
+    tree.column("application_date", width=130, anchor="center")
+    tree.column("approval_date", width=130, anchor="center")
+    tree.column("principal", width=120, anchor="center")
+
+    tree.pack(fill="both", expand=True)
+
+    load_loan_report(tree, report_service)
 
 
-    # Return flow
-    def on_return_click():
-        app_context["frames"]["main"].tkraise()
-    
-    tk.Button(frame, text="Return", width=15, command=on_return_click).pack(anchor="se", padx=15, pady=15)
+def load_loan_report(tree, report_service):
+    tree.delete(*tree.get_children())
+
+    rows = report_service.get_loan_report()
+
+    for row in rows:
+        tree.insert(
+            "",
+            "end",
+            values=(
+                row["loan_id"],
+                row["name"],
+                row["product_name"],
+                row["applicationDate"],
+                row["approval_date"],
+                row["principalAmount"],
+            )
+        )
