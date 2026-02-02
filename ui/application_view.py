@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import messagebox
 import sqlite3
 
+from services import application_service
+
 def build_applications_view(parent, app_context):
     frame = tk.Frame(parent)
     app_context["frames"]["applications"] = frame
@@ -79,13 +81,54 @@ def build_applications_view(parent, app_context):
         popup.transient(frame)
         popup.grab_set()
 
-        tk.Label(popup, text="Customer Name").pack(pady=5)
-        name_entry = tk.Entry(popup)
-        name_entry.pack()
+        tk.Label(popup, text="Customer").pack(pady=(10, 2))
 
-        tk.Label(popup, text="Product Name").pack(pady=5)
-        product_entry = tk.Entry(popup)
-        product_entry.pack()
+        customers = application_service.get_all_customers()  # can be (id, name) OR (id, name, ...)
+        if not customers:
+            messagebox.showerror("Missing data", "No customers found in the database.")
+            popup.destroy()
+            return
+
+        customer_ids = [row[0] for row in customers]
+        customer_names = [row[1] for row in customers]
+
+        customer_var = tk.StringVar()
+        customer_combo = ttk.Combobox(
+            popup,
+            textvariable=customer_var,
+            values=customer_names,
+            state="readonly",
+            width=30
+        )
+        customer_combo.pack(pady=(0, 10))
+        customer_combo.current(0)  # optional default selection
+
+
+        tk.Label(popup, text="Product").pack(pady=(10, 2))
+       
+        products = application_service.get_all_products()
+        if not products:
+            messagebox.showerror("Missing data", "No products found.")
+            popup.destroy()
+            return
+
+        product_ids = [row[0] for row in products]
+        product_names = [row[1] for row in products]
+
+
+
+
+        product_var = tk.StringVar()
+        product_combo = ttk.Combobox(
+            popup,
+            textvariable=product_var,
+            values=product_names,
+            state="readonly",
+            width=30
+        )
+        product_combo.pack(pady=(0, 10))
+        product_combo.current(0)  # optional default selection
+
 
         tk.Label(popup, text="Income £").pack(pady=5)
         income_entry = tk.Entry(popup)
@@ -117,9 +160,22 @@ def build_applications_view(parent, app_context):
 
         def save_application():
             try:
+                c_idx = customer_combo.current()
+                p_idx = product_combo.current()
+
+                if c_idx < 0:
+                    messagebox.showwarning("Missing data", "Please select a customer.")
+                    return
+                if p_idx < 0:
+                    messagebox.showwarning("Missing data", "Please select a product.")
+                    return
+
+                customer_id = customer_ids[c_idx]
+                product_id = product_ids[p_idx]
+
                 application_service.create_application(
-                    name_entry.get(),
-                    product_entry.get(),
+                    customer_id,
+                    product_id,
                     income_entry.get(),
                     job_entry.get(),
                     credit_entry.get(),
@@ -134,6 +190,8 @@ def build_applications_view(parent, app_context):
 
             except Exception as e:
                 messagebox.showerror("Error", str(e))
+
+
 
         tk.Button(popup, text="Save", width=10, command=save_application).pack(pady=15)   
 

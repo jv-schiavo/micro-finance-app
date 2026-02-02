@@ -11,7 +11,8 @@ class ApplicationService:
         a.amountRequested, a.loanPurpose, a.status, a.officerNotes, a.loanTermRequested
         FROM application a
         JOIN customer c ON a.customer_id = c.customer_id
-        JOIN product p ON a.product_id = p.product_id;
+        JOIN product p ON a.product_id = p.product_id
+        ORDER BY a.applicationDate DESC;
         """
         return self.db.fetchall(query)
     
@@ -51,3 +52,19 @@ class ApplicationService:
         """
 
         self.db.execute(query, (application_id,))
+
+    def get_all_products(self):
+        query = """
+        SELECT product_id, product_name
+        FROM product
+        ORDER BY product_name;
+        """
+        return self.db.fetchall(query)
+    
+    def get_all_customers(self):
+        query = """
+        SELECT customer_id, name
+        FROM customer
+        ORDER BY name;
+        """
+        return self.db.fetchall(query)
