@@ -67,6 +67,9 @@ MICRO_FINANCE_APP
 ├── .gitignore
 └── README.md
 
+
+````
+
 ---
 
 ## Database Design Summary
